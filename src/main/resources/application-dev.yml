@@ -1,0 +1,8 @@
+spring:
+  thymeleaf:
+    cache: false  # rechargement à chaud en dev
+
+logging:
+  level:
+    com.tortiki.frontend: DEBUG
+    feign: DEBUG  # logs des requêtes Feign en dev

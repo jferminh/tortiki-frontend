@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: tortiki-frontend
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+    mode: HTML
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true   # active PUT/DELETE depuis les formulaires HTML
+
+server:
+  port: 8081  # l'API tourne sur 8080, le frontend sur 8081
+  error:
+    whitelabel:
+      enabled: false  # on gère nos propres pages d'erreur
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+
+tortiki:
+  api:
+    url: ${TORTIKI_API_URL:http://localhost:8080}
+
+logging:
+  level:
+    com.tortiki.frontend: INFO
+    org.springframework.security: DEBUG  # à retirer en prod

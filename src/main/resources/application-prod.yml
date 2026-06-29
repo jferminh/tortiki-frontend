@@ -1,0 +1,8 @@
+spring:
+  thymeleaf:
+    cache: true  # cache activé en production
+
+logging:
+  level:
+    com.tortiki.frontend: WARN
+    # aucune donnée personnelle dans les logs prod
