@@ -22,7 +22,7 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
  * <p>CSRF : activé sur tous les formulaires Thymeleaf. Le token CSRF
  * est injecté automatiquement via {@code th:action} de Thymeleaf +
  * {@code CookieCsrfTokenRepository}. Référence OWASP :
- * https://owasp.org/www-community/attacks/csrf</p>
+ * <a href="https://owasp.org/www-community/attacks/csrf">...</a></p>
  *
  * <p>Rôles : le contrôle d'accès fin (ROLE_SELLER, ROLE_BUYER, ROLE_ADMIN)
  * est délégué à {@code tortiki-api}. Le frontend protège uniquement
@@ -33,25 +33,61 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 @EnableWebSecurity
 public class SecurityConfig {
 
+  /** Route racine — page d'accueil. */
+  private static final String ROUTE_HOME = "/";
+
   /** Route de connexion. */
   private static final String ROUTE_LOGIN = "/login";
 
   /** Route de déconnexion. */
   private static final String ROUTE_LOGOUT = "/logout";
 
+  /** Route d'inscription. */
+  private static final String ROUTE_REGISTER = "/register";
+
+  /** Routes publiques des annonces. */
+  private static final String ROUTE_LISTINGS = "/listings/**";
+
+  /** Route de recherche. */
+  private static final String ROUTE_SEARCH = "/search";
+
+  /** Sous-routes de recherche. */
+  private static final String ROUTE_SEARCH_ALL = "/search/**";
+
+  /** Ressources statiques CSS. */
+  private static final String ROUTE_STATIC_CSS = "/css/**";
+
+  /** Ressources statiques JS. */
+  private static final String ROUTE_STATIC_JS = "/js/**";
+
+  /** Ressources statiques images. */
+  private static final String ROUTE_STATIC_IMAGES = "/images/**";
+
+  /** Webjars (Bootstrap, etc.). */
+  private static final String ROUTE_WEBJARS = "/webjars/**";
+
+  /** Actuator health — sonde Railway/Render. */
+  private static final String ROUTE_ACTUATOR_HEALTH = "/actuator/health";
+
+  /** URL de redirection après logout réussi. */
+  private static final String ROUTE_LOGIN_LOGOUT = ROUTE_LOGIN + "?logout";
+
+  /** URL de redirection après échec d'authentification. */
+  private static final String ROUTE_LOGIN_ERROR = ROUTE_LOGIN + "?error";
+
   /** Routes publiques — accessibles sans authentification. */
   private static final String[] PUBLIC_ROUTES = {
-      "/",
-      "/login",
-      "/register",
-      "/listings/**",
-      "/search",
-      "/search/**",
-      "/css/**",
-      "/js/**",
-      "/images/**",
-      "/webjars/**",
-      "/actuator/health"
+      ROUTE_HOME,
+      ROUTE_LOGIN,
+      ROUTE_REGISTER,
+      ROUTE_LISTINGS,
+      ROUTE_SEARCH,
+      ROUTE_SEARCH_ALL,
+      ROUTE_STATIC_CSS,
+      ROUTE_STATIC_JS,
+      ROUTE_STATIC_IMAGES,
+      ROUTE_WEBJARS,
+      ROUTE_ACTUATOR_HEALTH
   };
 
   /** Routes réservées aux vendeurs. */
@@ -104,7 +140,7 @@ public class SecurityConfig {
         .formLogin(form -> form
             .loginPage(ROUTE_LOGIN)
             .loginProcessingUrl(ROUTE_LOGIN)
-            .defaultSuccessUrl("/", true)
+            .defaultSuccessUrl(ROUTE_HOME, true)
             .failureHandler(authenticationFailureHandler())
             .permitAll()
         )
@@ -112,7 +148,7 @@ public class SecurityConfig {
         // Logout
         .logout(logout -> logout
             .logoutUrl(ROUTE_LOGOUT)
-            .logoutSuccessUrl(ROUTE_LOGIN + "?logout")
+            .logoutSuccessUrl(ROUTE_LOGIN_LOGOUT)
             .invalidateHttpSession(true)
             .deleteCookies("JSESSIONID")
             .permitAll()
@@ -141,6 +177,6 @@ public class SecurityConfig {
    */
   @Bean
   public AuthenticationFailureHandler authenticationFailureHandler() {
-    return new SimpleUrlAuthenticationFailureHandler(ROUTE_LOGIN + "?error");
+    return new SimpleUrlAuthenticationFailureHandler(ROUTE_LOGIN_ERROR);
   }
 }
