@@ -50,11 +50,11 @@ public interface SearchApiClient {
    */
   @GetMapping("/api/v1/listings/search")
   List<ListingCardResponse> search(
-    @RequestParam(required = false) String query,
-    @RequestParam(required = false) String city,
-    @RequestParam(required = false) String postalCode,
-    @RequestParam(required = false) Long cuisineTypeId,
-    @RequestParam(defaultValue = "0") int page,
-    @RequestParam(defaultValue = "12") int size
+      @RequestParam(required = false) String query,
+      @RequestParam(required = false) String city,
+      @RequestParam(required = false) String postalCode,
+      @RequestParam(required = false) Long cuisineTypeId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "12") int size
   );
 }

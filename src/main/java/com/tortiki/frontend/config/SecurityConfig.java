@@ -33,72 +33,106 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  /** Route racine — page d'accueil. */
+  /**
+   * Route racine — page d'accueil.
+   */
   private static final String ROUTE_HOME = "/";
 
-  /** Route de connexion. */
+  /**
+   * Route de connexion.
+   */
   private static final String ROUTE_LOGIN = "/login";
 
-  /** Route de déconnexion. */
+  /**
+   * Route de déconnexion.
+   */
   private static final String ROUTE_LOGOUT = "/logout";
 
-  /** Route d'inscription. */
+  /**
+   * Route d'inscription.
+   */
   private static final String ROUTE_REGISTER = "/register";
 
-  /** Routes publiques des annonces. */
+  /**
+   * Routes publiques des annonces.
+   */
   private static final String ROUTE_LISTINGS = "/listings/**";
 
-  /** Route de recherche. */
+  /**
+   * Route de recherche.
+   */
   private static final String ROUTE_SEARCH = "/search";
 
-  /** Sous-routes de recherche. */
+  /**
+   * Sous-routes de recherche.
+   */
   private static final String ROUTE_SEARCH_ALL = "/search/**";
 
-  /** Ressources statiques CSS. */
+  /**
+   * Ressources statiques CSS.
+   */
   private static final String ROUTE_STATIC_CSS = "/css/**";
 
-  /** Ressources statiques JS. */
+  /**
+   * Ressources statiques JS.
+   */
   private static final String ROUTE_STATIC_JS = "/js/**";
 
-  /** Ressources statiques images. */
+  /**
+   * Ressources statiques images.
+   */
   private static final String ROUTE_STATIC_IMAGES = "/images/**";
 
-  /** Webjars (Bootstrap, etc.). */
+  /**
+   * Webjars (Bootstrap, etc.).
+   */
   private static final String ROUTE_WEBJARS = "/webjars/**";
 
-  /** Actuator health — sonde Railway/Render. */
+  /**
+   * Actuator health — sonde Railway/Render.
+   */
   private static final String ROUTE_ACTUATOR_HEALTH = "/actuator/health";
 
-  /** URL de redirection après logout réussi. */
+  /**
+   * URL de redirection après logout réussi.
+   */
   private static final String ROUTE_LOGIN_LOGOUT = ROUTE_LOGIN + "?logout";
 
-  /** URL de redirection après échec d'authentification. */
+  /**
+   * URL de redirection après échec d'authentification.
+   */
   private static final String ROUTE_LOGIN_ERROR = ROUTE_LOGIN + "?error";
 
-  /** Routes publiques — accessibles sans authentification. */
+  /**
+   * Routes publiques — accessibles sans authentification.
+   */
   private static final String[] PUBLIC_ROUTES = {
-      ROUTE_HOME,
-      ROUTE_LOGIN,
-      ROUTE_REGISTER,
-      ROUTE_LISTINGS,
-      ROUTE_SEARCH,
-      ROUTE_SEARCH_ALL,
-      ROUTE_STATIC_CSS,
-      ROUTE_STATIC_JS,
-      ROUTE_STATIC_IMAGES,
-      ROUTE_WEBJARS,
-      ROUTE_ACTUATOR_HEALTH
+    ROUTE_HOME,
+    ROUTE_LOGIN,
+    ROUTE_REGISTER,
+    ROUTE_LISTINGS,
+    ROUTE_SEARCH,
+    ROUTE_SEARCH_ALL,
+    ROUTE_STATIC_CSS,
+    ROUTE_STATIC_JS,
+    ROUTE_STATIC_IMAGES,
+    ROUTE_WEBJARS,
+    ROUTE_ACTUATOR_HEALTH
   };
 
-  /** Routes réservées aux vendeurs. */
+  /**
+   * Routes réservées aux vendeurs.
+   */
   private static final String[] SELLER_ROUTES = {
-      "/dashboard/**",
-      "/seller/**"
+    "/dashboard/**",
+    "/seller/**"
   };
 
-  /** Routes réservées aux administrateurs. */
+  /**
+   * Routes réservées aux administrateurs.
+   */
   private static final String[] ADMIN_ROUTES = {
-      "/admin/**"
+    "/admin/**"
   };
 
   /**
@@ -123,45 +157,45 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers(PUBLIC_ROUTES).permitAll()
-            .requestMatchers(SELLER_ROUTES).authenticated()
-            .requestMatchers(ADMIN_ROUTES).authenticated()
-            .anyRequest().authenticated()
-        )
+      .authorizeHttpRequests(auth -> auth
+        .requestMatchers(PUBLIC_ROUTES).permitAll()
+        .requestMatchers(SELLER_ROUTES).authenticated()
+        .requestMatchers(ADMIN_ROUTES).authenticated()
+        .anyRequest().authenticated()
+      )
 
-        // CSRF activé — formulaires Thymeleaf (th:action génère le token)
-        .csrf(csrf -> csrf
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-        )
+      // CSRF activé — formulaires Thymeleaf (th:action génère le token)
+      .csrf(csrf -> csrf
+        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+      )
 
-        // Login : page personnalisée Thymeleaf
-        .formLogin(form -> form
-            .loginPage(ROUTE_LOGIN)
-            .loginProcessingUrl(ROUTE_LOGIN)
-            .defaultSuccessUrl(ROUTE_HOME, true)
-            .failureHandler(authenticationFailureHandler())
-            .permitAll()
-        )
+      // Login : page personnalisée Thymeleaf
+      .formLogin(form -> form
+        .loginPage(ROUTE_LOGIN)
+        .loginProcessingUrl(ROUTE_LOGIN)
+        .defaultSuccessUrl(ROUTE_HOME, true)
+        .failureHandler(authenticationFailureHandler())
+        .permitAll()
+      )
 
-        // Logout
-        .logout(logout -> logout
-            .logoutUrl(ROUTE_LOGOUT)
-            .logoutSuccessUrl(ROUTE_LOGIN_LOGOUT)
-            .invalidateHttpSession(true)
-            .deleteCookies("JSESSIONID")
-            .permitAll()
-        )
+      // Logout
+      .logout(logout -> logout
+        .logoutUrl(ROUTE_LOGOUT)
+        .logoutSuccessUrl(ROUTE_LOGIN_LOGOUT)
+        .invalidateHttpSession(true)
+        .deleteCookies("JSESSIONID")
+        .permitAll()
+      )
 
-        // Redirection automatique vers /login si non authentifié
-        .exceptionHandling(ex -> ex
-            .authenticationEntryPoint((request, response, authException) -> {
-              log.debug("Accès non authentifié sur {} → redirection /login",
-                  request.getRequestURI());
-              response.sendRedirect(ROUTE_LOGIN);
-            })
-        );
+      // Redirection automatique vers /login si non authentifié
+      .exceptionHandling(ex -> ex
+        .authenticationEntryPoint((request, response, authException) -> {
+          log.debug("Accès non authentifié sur {} → redirection /login",
+            request.getRequestURI());
+          response.sendRedirect(ROUTE_LOGIN);
+        })
+      );
 
     return http.build();
   }
