@@ -27,19 +27,29 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-  /** Pattern d'URL pour les fichiers CSS. */
+  /**
+   * Pattern d'URL pour les fichiers CSS.
+   */
   private static final String ROUTE_CSS = "/css/**";
 
-  /** Pattern d'URL pour les fichiers JavaScript. */
+  /**
+   * Pattern d'URL pour les fichiers JavaScript.
+   */
   private static final String ROUTE_JS = "/js/**";
 
-  /** Pattern d'URL pour les images. */
+  /**
+   * Pattern d'URL pour les images.
+   */
   private static final String ROUTE_IMAGES = "/images/**";
 
-  /** Pattern d'URL pour les webjars (Bootstrap). */
+  /**
+   * Pattern d'URL pour les webjars (Bootstrap).
+   */
   private static final String ROUTE_WEBJARS = "/webjars/**";
 
-  /** Encodage des fichiers de messages i18n. */
+  /**
+   * Encodage des fichiers de messages i18n.
+   */
   private static final String MESSAGE_ENCODING = "UTF-8";
 
   /**
@@ -67,16 +77,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Override
   public void addResourceHandlers(final ResourceHandlerRegistry registry) {
     registry.addResourceHandler(ROUTE_CSS)
-        .addResourceLocations(staticRootPath + "css/");
+      .addResourceLocations(staticRootPath + "css/");
 
     registry.addResourceHandler(ROUTE_JS)
-        .addResourceLocations(staticRootPath + "js/");
+      .addResourceLocations(staticRootPath + "js/");
 
     registry.addResourceHandler(ROUTE_IMAGES)
-        .addResourceLocations(staticRootPath + "images/");
+      .addResourceLocations(staticRootPath + "images/");
 
     registry.addResourceHandler(ROUTE_WEBJARS)
-        .addResourceLocations("classpath:/META-INF/resources/webjars/");
+      .addResourceLocations("classpath:/META-INF/resources/webjars/");
   }
 
   /**
@@ -109,7 +119,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Bean
   public MessageSource messageSource() {
     ReloadableResourceBundleMessageSource source =
-        new ReloadableResourceBundleMessageSource();
+      new ReloadableResourceBundleMessageSource();
     source.setBasename(messageBasename);
     source.setDefaultEncoding(MESSAGE_ENCODING);
     source.setUseCodeAsDefaultMessage(true);
