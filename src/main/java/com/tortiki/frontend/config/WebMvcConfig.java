@@ -1,6 +1,7 @@
 package com.tortiki.frontend.config;
 
 import java.util.Locale;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,9 +27,6 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-  /** Chemin des ressources statiques dans le classpath. */
-  private static final String STATIC_RESOURCES_PATH = "classpath:/static/";
-
   /** Pattern d'URL pour les fichiers CSS. */
   private static final String ROUTE_CSS = "/css/**";
 
@@ -38,41 +36,47 @@ public class WebMvcConfig implements WebMvcConfigurer {
   /** Pattern d'URL pour les images. */
   private static final String ROUTE_IMAGES = "/images/**";
 
-  /** Pattern d'URL pour les webjars (Bootstrap via CDN local). */
+  /** Pattern d'URL pour les webjars (Bootstrap). */
   private static final String ROUTE_WEBJARS = "/webjars/**";
-
-  /** Chemin classpath des webjars. */
-  private static final String WEBJARS_PATH = "classpath:/META-INF/resources/webjars/";
 
   /** Encodage des fichiers de messages i18n. */
   private static final String MESSAGE_ENCODING = "UTF-8";
 
-  /** Basename des fichiers de messages (messages.properties). */
-  private static final String MESSAGE_BASENAME = "classpath:messages";
+  /**
+   * Chemin racine des ressources statiques, configurable via {@code application.yml}.
+   * Valeur par défaut : {@code classpath:/static/}.
+   */
+  @Value("${tortiki.static.path:classpath:/static/}")
+  private String staticRootPath;
 
   /**
-   * Déclare les handlers pour les ressources statiques.
+   * Basename des fichiers de messages, configurable via {@code application.yml}.
+   * Valeur par défaut : {@code classpath:messages}.
+   */
+  @Value("${tortiki.messages.basename:classpath:messages}")
+  private String messageBasename;
+
+  /**
+   * Déclare-les handlers pour les ressources statiques.
    *
-   * <p>Spring Boot auto-configure déjà {@code /static/**} mais cette
-   * déclaration explicite garantit l'ordre de résolution et la compatibilité
-   * avec le {@code SecurityConfig} qui autorise {@code /css/**}, {@code /js/**}
-   * et {@code /images/**} sans authentification.</p>
+   * <p>Le chemin racine est configurable via la propriété
+   * {@code tortiki.static.path} dans {@code application.yml}.</p>
    *
    * @param registry le registre des handlers de ressources
    */
   @Override
   public void addResourceHandlers(final ResourceHandlerRegistry registry) {
     registry.addResourceHandler(ROUTE_CSS)
-      .addResourceLocations(STATIC_RESOURCES_PATH + "css/");
+        .addResourceLocations(staticRootPath + "css/");
 
     registry.addResourceHandler(ROUTE_JS)
-      .addResourceLocations(STATIC_RESOURCES_PATH + "js/");
+        .addResourceLocations(staticRootPath + "js/");
 
     registry.addResourceHandler(ROUTE_IMAGES)
-      .addResourceLocations(STATIC_RESOURCES_PATH + "images/");
+        .addResourceLocations(staticRootPath + "images/");
 
     registry.addResourceHandler(ROUTE_WEBJARS)
-      .addResourceLocations(WEBJARS_PATH);
+        .addResourceLocations("classpath:/META-INF/resources/webjars/");
   }
 
   /**
@@ -97,13 +101,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
    * <p>Utilisé par Thymeleaf via {@code #{clé}} pour les libellés
    * et messages d'erreur de l'interface.</p>
    *
+   * <p>L'option {@code useCodeAsDefaultMessage} affiche la clé brute
+   * si elle est absente — évite les exceptions en cours de développement.</p>
+   *
    * @return la source de messages rechargeable
    */
   @Bean
   public MessageSource messageSource() {
     ReloadableResourceBundleMessageSource source =
-      new ReloadableResourceBundleMessageSource();
-    source.setBasename(MESSAGE_BASENAME);
+        new ReloadableResourceBundleMessageSource();
+    source.setBasename(messageBasename);
     source.setDefaultEncoding(MESSAGE_ENCODING);
     source.setUseCodeAsDefaultMessage(true);
     return source;
