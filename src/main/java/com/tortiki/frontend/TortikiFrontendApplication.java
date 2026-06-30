@@ -13,7 +13,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients
 public class TortikiFrontendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TortikiFrontendApplication.class, args);
-	}
+  /**
+   * Démarre l'application Spring Boot Tortiki Frontend.
+   *
+   * @param args arguments de ligne de commande
+   */
+  public static void main(final String[] args) {
+    SpringApplication.run(TortikiFrontendApplication.class, args);
+  }
 }
