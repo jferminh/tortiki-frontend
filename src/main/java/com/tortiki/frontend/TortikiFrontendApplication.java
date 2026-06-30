@@ -6,6 +6,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
  * Point d'entrée de l'application web Tortiki Frontend.
+ *
  * <p>Active Spring Cloud OpenFeign pour la communication avec tortiki-api.</p>
  */
 @SpringBootApplication
