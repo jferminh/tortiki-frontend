@@ -12,11 +12,13 @@
     <div class="container">
         <form th:action="@{/search/results}" method="get" class="row g-2">
             <div class="col-12 col-md-4">
-                <input type="text" name="city" th:value="${criteria.city}"
+                <label for="filterCity" class="visually-hidden">Ville</label>
+                <input type="text" id="filterCity" name="city" th:value="${criteria.city}"
                        class="form-control" placeholder="Ville"/>
             </div>
             <div class="col-12 col-md-4">
-                <select name="cuisineTypeId" class="form-select">
+                <label for="filterCuisineType" class="visually-hidden">Type de cuisine</label>
+                <select id="filterCuisineType" name="cuisineTypeId" class="form-select">
                     <option value="">Toutes les cuisines</option>
                     <option th:each="cuisine : ${cuisineTypes}"
                             th:value="${cuisine.id}"
@@ -64,7 +66,7 @@
                  th:if="${#lists.isEmpty(results)}">
                 <div class="fs-1 mb-3">🔍</div>
                 <h3 class="h5">Aucun résultat</h3>
-                <p class="mb-0">Essayez une autre ville ou un autre type de cuisine.</p>
+                <p class="mb-0">Essayez une autre ville or un autre type de cuisine.</p>
             </div>
         </div>
     </div>
