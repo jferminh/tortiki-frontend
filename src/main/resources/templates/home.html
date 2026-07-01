@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="fr">
-<head th:replace="~{fragments/layout :: head('Accueil')}"></head>
+<head>
+    <title>Tortiki — Accueil</title>
+    <th:block th:replace="~{fragments/layout :: head('Accueil')}"></th:block>
+</head>
 <body class="bg-light">
 
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
@@ -85,7 +88,6 @@
                          th:text="${cuisine.name}">Cuisine</div>
                 </a>
             </div>
-            <!-- État vide -->
             <div class="col-12 text-center text-muted py-4"
                  th:if="${#lists.isEmpty(cuisineTypes)}">
                 <p class="mb-0">Aucun type de cuisine disponible pour le moment.</p>
@@ -109,6 +111,5 @@
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
