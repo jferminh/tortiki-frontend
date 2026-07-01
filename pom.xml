@@ -112,6 +112,7 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Bootstrap servi localement via WebJars (pas de CDN externe) -->
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>bootstrap</artifactId>
@@ -143,27 +144,27 @@
 			</plugin>
 
 			<!-- Checkstyle Google Style -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.4.0</version>
-        <configuration>
-          <configLocation>google_checks.xml</configLocation>
-          <failsOnError>true</failsOnError>
-          <violationSeverity>error</violationSeverity>
-          <consoleOutput>true</consoleOutput>
-          <includeTestSourceDirectory>true</includeTestSourceDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <id>checkstyle-validation</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.4.0</version>
+				<configuration>
+					<configLocation>google_checks.xml</configLocation>
+					<failsOnError>true</failsOnError>
+					<violationSeverity>error</violationSeverity>
+					<consoleOutput>true</consoleOutput>
+					<includeTestSourceDirectory>true</includeTestSourceDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>checkstyle-validation</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 			<!-- JaCoCo ≥ 70% -->
 			<plugin>
