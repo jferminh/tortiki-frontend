@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Tortiki — Rechercher</title>
+    <th:block th:replace="~{fragments/layout :: head('Rechercher')}"></th:block>
+</head>
+<body class="bg-light">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<section class="bg-white py-5 border-bottom">
+    <div class="container">
+        <h1 class="h3 fw-bold mb-4 text-center">Rechercher des plats</h1>
+        <form th:action="@{/search/results}" method="get" class="row g-3 justify-content-center">
+            <div class="col-12 col-md-4">
+                <label for="city" class="form-label small text-muted">Ville</label>
+                <input type="text" id="city" name="city"
+                       class="form-control" placeholder="Lyon, Marseille…"/>
+            </div>
+            <div class="col-12 col-md-4">
+                <label for="cuisineTypeId" class="form-label small text-muted">Type de cuisine</label>
+                <select id="cuisineTypeId" name="cuisineTypeId" class="form-select">
+                    <option value="">Toutes les cuisines</option>
+                    <option th:each="cuisine : ${cuisineTypes}"
+                            th:value="${cuisine.id}"
+                            th:text="${cuisine.name}">Cuisine</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">Rechercher</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
