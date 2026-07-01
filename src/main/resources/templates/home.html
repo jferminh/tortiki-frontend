@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head th:replace="~{fragments/layout :: head('Accueil')}"></head>
+<body class="bg-light">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- ===== HERO ===== -->
+<section class="bg-white py-5 border-bottom">
+    <div class="container text-center py-3">
+        <h1 class="display-5 fw-bold mb-3">
+            Des plats faits maison,<br/>près de chez vous
+        </h1>
+        <p class="lead text-muted mb-4">
+            Commandez directement auprès de cuisiniers passionnés
+            et récupérez votre repas en Click &amp; Collect.
+        </p>
+        <form th:action="@{/search}" method="get" class="row g-2 justify-content-center">
+            <div class="col-12 col-md-5">
+                <input type="text"
+                       name="city"
+                       class="form-control form-control-lg"
+                       placeholder="Votre ville (ex : Lyon, Marseille…)"
+                       aria-label="Ville de recherche"/>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-success btn-lg px-4">
+                    Trouver des plats
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- ===== COMMENT ÇA MARCHE ===== -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-semibold mb-5">Comment ça marche ?</h2>
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="bg-white rounded-3 shadow-sm p-4 h-100">
+                    <div class="fs-1 mb-3">🔍</div>
+                    <h3 class="h5 fw-semibold">1. Cherchez</h3>
+                    <p class="text-muted small mb-0">
+                        Entrez votre ville et trouvez des cuisiniers
+                        qui cuisinent près de chez vous.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="bg-white rounded-3 shadow-sm p-4 h-100">
+                    <div class="fs-1 mb-3">📩</div>
+                    <h3 class="h5 fw-semibold">2. Contactez</h3>
+                    <p class="text-muted small mb-0">
+                        Envoyez une demande au cuisinier
+                        pour réserver vos portions.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="bg-white rounded-3 shadow-sm p-4 h-100">
+                    <div class="fs-1 mb-3">🥘</div>
+                    <h3 class="h5 fw-semibold">3. Récupérez</h3>
+                    <p class="text-muted small mb-0">
+                        Venez chercher votre repas à l'adresse
+                        convenue — frais et fait maison.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CUISINES DU MONDE ===== -->
+<section class="py-5 bg-white border-top">
+    <div class="container">
+        <h2 class="text-center fw-semibold mb-5">Explorez les cuisines du monde</h2>
+        <div class="row g-3">
+            <div class="col-6 col-md-3 col-lg-2"
+                 th:each="cuisine : ${cuisineTypes}">
+                <a th:href="@{/search(cuisineTypeId=${cuisine.id})}"
+                   class="d-block text-center text-decoration-none p-3
+                  bg-light rounded-3 border cuisine-card">
+                    <div class="fw-semibold text-dark small"
+                         th:text="${cuisine.name}">Cuisine</div>
+                </a>
+            </div>
+            <!-- État vide -->
+            <div class="col-12 text-center text-muted py-4"
+                 th:if="${#lists.isEmpty(cuisineTypes)}">
+                <p class="mb-0">Aucun type de cuisine disponible pour le moment.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== APPEL À L'ACTION VENDEUR ===== -->
+<section class="py-5 bg-success text-white">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-3">Vous cuisinez ? Partagez votre talent !</h2>
+        <p class="lead mb-4 opacity-75">
+            Publiez vos plats et trouvez des clients dans votre quartier.
+        </p>
+        <a th:href="@{/register}" class="btn btn-light btn-lg fw-semibold px-5">
+            Devenir vendeur
+        </a>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
