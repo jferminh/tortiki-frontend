@@ -29,7 +29,7 @@ public class SearchController {
   private final SearchApiClient searchApiClient;
 
   /**
-   * Affiche le formulaire de recherche vide (sans résultats).
+   * Affiche le formulaire de recherche vide (sans résultat).
    *
    * @param model modèle Thymeleaf
    * @return nom de la vue {@code search}
@@ -37,7 +37,7 @@ public class SearchController {
   @GetMapping("/search")
   public String searchForm(final Model model) {
     model.addAttribute("cuisineTypes", searchApiClient.getCuisineTypes());
-    return "search-redirect";
+    return "search";
   }
 
   /**
