@@ -1,8 +1,14 @@
 spring:
   thymeleaf:
     cache: true  # cache activé en production
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            loggerLevel: NONE  # aucun log des requêtes/réponses Feign en production
 
 logging:
   level:
     com.tortiki.frontend: WARN
-    # aucune donnée personnelle dans les logs prod
+    feign: WARN
