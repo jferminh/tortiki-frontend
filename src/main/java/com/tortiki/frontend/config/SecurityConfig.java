@@ -1,8 +1,11 @@
 package com.tortiki.frontend.config;
 
+import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -15,9 +18,11 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
  * Configuration Spring Security du frontend Tortiki.
  *
  * <p>Stratégie retenue : sessions HTTP stateful côté frontend,
- * en cohérence avec {@code tortiki-api}. Le frontend ne gère pas
- * l'authentification lui-même — il la délègue à l'API via Feign,
- * puis stocke le {@code JSESSIONID} reçu dans la session courante.</p>
+ * en cohérence avec {@code tortiki-api}. L'authentification n'est
+ * jamais vérifiée localement — elle est déléguée à
+ * {@code ApiDelegatingAuthenticationProvider}, qui interroge l'API
+ * et relie la session frontend à la session API via un cookie
+ * stocké côté serveur (voir Issue 58).</p>
  *
  * <p>CSRF : activé sur tous les formulaires Thymeleaf. Le token CSRF
  * est injecté automatiquement via {@code th:action} de Thymeleaf +
@@ -103,10 +108,28 @@ public class SecurityConfig {
   /**
    * Routes réservées aux administrateurs — authentification vérifiée ici,
    * rôle vérifié côté API.
-   * */
+   */
   private static final String[] ADMIN_ROUTES = {
       "/admin/**"
   };
+
+  /**
+   * Gestionnaire d'authentification explicite, utilisant exclusivement
+   * {@code ApiDelegatingAuthenticationProvider}.
+   *
+   * <p>Sans cette déclaration explicite, Spring Security ignorerait
+   * silencieusement notre provider et retomberait sur son mécanisme
+   * par défaut (utilisateur en mémoire) — faille OWASP A07 identifiée
+   * à l'Issue 58.</p>
+   *
+   * @param provider le fournisseur d'authentification délégué à l'API
+   * @return le gestionnaire d'authentification configuré
+   */
+  @Bean
+  public AuthenticationManager authenticationManager(
+      final ApiDelegatingAuthenticationProvider provider) {
+    return new ProviderManager(provider);
+  }
 
   /**
    * Chaîne de filtres de sécurité principale du frontend.
@@ -124,12 +147,17 @@ public class SecurityConfig {
    * et {@code GlobalExceptionHandler} redirigera vers {@code /403}.</p>
    *
    * @param http le constructeur de sécurité HTTP
+   * @param authenticationManager le gestionnaire d'authentification délégué à l'API
    * @return la chaîne de filtres configurée
    * @throws Exception en cas d'erreur de configuration
    */
   @Bean
-  public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
+  public SecurityFilterChain securityFilterChain(
+      final HttpSecurity http,
+      final AuthenticationManager authenticationManager) throws Exception {
     http
+        .authenticationManager(authenticationManager)
+
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(PUBLIC_ROUTES).permitAll()
             .requestMatchers(SELLER_ROUTES).authenticated()
@@ -143,7 +171,7 @@ public class SecurityConfig {
             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
         )
 
-        // Login : page personnalisée Thymeleaf
+        // Login : page personnalisée Thymeleaf, authentification déléguée à l'API
         .formLogin(form -> form
             .loginPage(ROUTE_LOGIN)
             .loginProcessingUrl(ROUTE_LOGIN)
