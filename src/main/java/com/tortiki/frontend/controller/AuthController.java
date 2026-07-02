@@ -23,6 +23,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class AuthController {
 
+  /** Nom de la vue Thymeleaf du formulaire d'inscription. */
+  private static final String VIEW_REGISTER = "register";
+
   /** Client Feign pour l'inscription auprès de l'API. */
   private final AuthApiClient authApiClient;
 
@@ -45,7 +48,7 @@ public class AuthController {
   @GetMapping("/register")
   public String registerForm(final Model model) {
     model.addAttribute("registerRequest", new RegisterRequest("", "", "", "", "BUYER"));
-    return "register";
+    return VIEW_REGISTER;
   }
 
   /**
@@ -63,7 +66,7 @@ public class AuthController {
       final BindingResult bindingResult,
       final RedirectAttributes redirectAttributes) {
     if (bindingResult.hasErrors()) {
-      return "register";
+      return VIEW_REGISTER;
     }
     try {
       authApiClient.register(request);
@@ -73,7 +76,7 @@ public class AuthController {
     } catch (FeignException.Conflict conflictException) {
       log.warn("Tentative d'inscription avec email déjà utilisé : {}", request.email());
       bindingResult.rejectValue("email", "email.exists", "Cet email est déjà utilisé.");
-      return "register";
+      return VIEW_REGISTER;
     }
   }
 }
