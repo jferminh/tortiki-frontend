@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xml:lang="fr"
+      th:lang="${#locale.language}"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${title} + ' — Tortiki'">Tortiki</title>
+
+    <link rel="stylesheet"
+          th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+    <link rel="stylesheet"
+          th:href="@{/css/tortiki.css}"/>
+</head>
+
+<body>
+<nav th:fragment="navbar"
+     class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-success" th:href="@{/}">
+            🍲 Tortiki
+        </a>
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarMain"
+                aria-controls="navbarMain"
+                aria-expanded="false"
+                aria-label="Ouvrir le menu de navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/search}">Rechercher</a>
+                </li>
+            </ul>
+            <div class="d-flex gap-2">
+                <a sec:authorize="isAnonymous()"
+                   th:href="@{/login}"
+                   class="btn btn-outline-success btn-sm">Connexion</a>
+                <a sec:authorize="isAnonymous()"
+                   th:href="@{/register}"
+                   class="btn btn-success btn-sm">Créer un compte</a>
+                <a sec:authorize="isAuthenticated()"
+                   th:href="@{/dashboard}"
+                   class="btn btn-outline-success btn-sm">Mon espace</a>
+                <form sec:authorize="isAuthenticated()"
+                      th:action="@{/logout}"
+                      method="post"
+                      class="d-inline">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        Déconnexion
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<footer th:fragment="footer" class="bg-light border-top mt-5 py-4">
+    <div class="container text-center text-muted small">
+        <p class="mb-1">© 2026 Tortiki — Plats faits maison en Click &amp; Collect</p>
+        <p class="mb-0">Fait avec ❤️ par des cuisiniers passionnés</p>
+    </div>
+</footer>
+
+<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

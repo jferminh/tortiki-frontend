@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Tortiki — Résultats de recherche</title>
+    <th:block th:replace="~{fragments/layout :: head('Résultats')}"></th:block>
+</head>
+<body class="bg-light">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<section class="bg-white py-4 border-bottom">
+    <div class="container">
+        <form th:action="@{/search/results}" method="get" class="row g-2">
+            <div class="col-12 col-md-4">
+                <label for="filterCity" class="visually-hidden">Ville</label>
+                <input type="text" id="filterCity" name="city" th:value="${criteria.city}"
+                       class="form-control" placeholder="Ville"/>
+            </div>
+            <div class="col-12 col-md-4">
+                <label for="filterCuisineType" class="visually-hidden">Type de cuisine</label>
+                <select id="filterCuisineType" name="cuisineTypeId" class="form-select">
+                    <option value="">Toutes les cuisines</option>
+                    <option th:each="cuisine : ${cuisineTypes}"
+                            th:value="${cuisine.id}"
+                            th:selected="${cuisine.id == criteria.cuisineTypeId}"
+                            th:text="${cuisine.name}">Cuisine</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <button type="submit" class="btn btn-success w-100">Filtrer</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <p class="text-muted mb-4"
+           th:text="${#lists.size(results)} + ' résultat(s) trouvé(s)'">0 résultat</p>
+
+        <div class="row g-4">
+            <div class="col-12 col-sm-6 col-md-4"
+                 th:each="listing : ${results}">
+                <a th:href="@{/listings/{id}(id=${listing.id})}"
+                   class="text-decoration-none text-dark">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img th:src="${listing.photoUrl}"
+                             class="card-img-top"
+                             style="height: 180px; object-fit: cover;"
+                             th:alt="${listing.title}"/>
+                        <div class="card-body">
+                            <h3 class="h6 fw-semibold mb-1" th:text="${listing.title}">Plat</h3>
+                            <p class="small text-muted mb-1" th:text="${listing.cuisineTypeName}">Cuisine</p>
+                            <p class="small text-muted mb-2"
+                               th:text="'Par ' + ${listing.sellerFirstName} + ' — ' + ${listing.city}">
+                                Vendeur
+                            </p>
+                            <p class="fw-bold text-success mb-0"
+                               th:text="${listing.price} + ' €'">Prix</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 text-center text-muted py-5"
+                 th:if="${#lists.isEmpty(results)}">
+                <div class="fs-1 mb-3">🔍</div>
+                <h3 class="h5">Aucun résultat</h3>
+                <p class="mb-0">Essayez une autre ville or un autre type de cuisine.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Tortiki — Créer un compte</title>
+    <th:block th:replace="~{fragments/layout :: head('Inscription')}"></th:block>
+</head>
+<body class="bg-light">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<section class="py-5">
+    <div class="container" style="max-width: 480px;">
+        <div class="card shadow-sm border-0 p-4">
+            <h1 class="h4 fw-bold mb-4 text-center">Créer un compte</h1>
+
+            <form th:action="@{/register}"
+                  th:object="${registerRequest}"
+                  method="post">
+
+                <div class="mb-3">
+                    <label for="firstName" class="form-label small">Prénom</label>
+                    <input type="text" id="firstName" th:field="*{firstName}"
+                           class="form-control"
+                           th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid'"/>
+                    <div class="invalid-feedback" th:errors="*{firstName}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="lastName" class="form-label small">Nom</label>
+                    <input type="text" id="lastName" th:field="*{lastName}"
+                           class="form-control"
+                           th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid'"/>
+                    <div class="invalid-feedback" th:errors="*{lastName}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label small">Email</label>
+                    <input type="email" id="email" th:field="*{email}"
+                           class="form-control"
+                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"/>
+                    <div class="invalid-feedback" th:errors="*{email}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label small">Mot de passe</label>
+                    <input type="password" id="password" th:field="*{password}"
+                           class="form-control"
+                           th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"/>
+                    <div class="invalid-feedback" th:errors="*{password}"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="role" class="form-label small">Je m'inscris en tant que</label>
+                    <select id="role" th:field="*{role}" class="form-select">
+                        <option value="BUYER">Client — je commande des plats</option>
+                        <option value="SELLER">Vendeur — je cuisine et vends mes plats</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Créer mon compte</button>
+            </form>
+
+            <p class="text-center text-muted small mt-4 mb-0">
+                Déjà inscrit ?
+                <a th:href="@{/login}">Se connecter</a>
+            </p>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

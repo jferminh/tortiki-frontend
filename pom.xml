@@ -111,6 +111,13 @@
 			<version>${allure.version}</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Bootstrap servi localement via WebJars (pas de CDN externe) -->
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>bootstrap</artifactId>
+			<version>5.3.3</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -144,6 +151,7 @@
 				<configuration>
 					<configLocation>google_checks.xml</configLocation>
 					<failsOnError>true</failsOnError>
+					<violationSeverity>error</violationSeverity>
 					<consoleOutput>true</consoleOutput>
 					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 				</configuration>
