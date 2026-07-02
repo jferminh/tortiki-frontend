@@ -39,14 +39,14 @@ public class FeignConfig {
   public RequestInterceptor sessionCookieInterceptor() {
     return requestTemplate -> {
       ServletRequestAttributes attributes =
-        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+          (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
       if (attributes != null) {
         HttpServletRequest request = attributes.getRequest();
         String cookie = request.getHeader("Cookie");
         if (cookie != null && !cookie.isBlank()) {
           requestTemplate.header("Cookie", cookie);
           log.debug("Cookie de session propagé vers l'API : {}",
-            cookie.replaceAll("JSESSIONID=[^;]+", "JSESSIONID=***"));
+              cookie.replaceAll("JSESSIONID=[^;]+", "JSESSIONID=***"));
         }
       }
     };
