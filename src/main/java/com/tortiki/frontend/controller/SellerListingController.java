@@ -32,19 +32,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/seller/listings")
 public class SellerListingController {
 
-  /** Nom de la vue Thymeleaf du formulaire d'annonce. */
   private static final String VIEW_LISTING_FORM = "listing-form";
-
-  /** Nom de la vue Thymeleaf de la liste des annonces. */
   private static final String VIEW_SELLER_LISTINGS = "seller-listings";
-
-  /** Route de redirection vers la liste des annonces après création/édition. */
   private static final String REDIRECT_SELLER_LISTINGS = "redirect:/seller/listings";
-
-  /** Nom de l'attribut de modèle/flash portant le message de succès. */
   private static final String ATTR_SUCCESS = "success";
+  private static final String ATTR_CUISINE_TYPES = "cuisineTypes";
+  private static final String ATTR_ALLERGENS = "allergens";
 
-  /** Client Feign pour la gestion des annonces. */
   private final ListingApiClient listingApiClient;
 
   /**
@@ -57,9 +51,6 @@ public class SellerListingController {
   @GetMapping
   public String myListings(final Model model, final Principal principal) {
     model.addAttribute("listings", listingApiClient.getMyListings(principal.getName()));
-    if (!model.containsAttribute(ATTR_SUCCESS)) {
-      model.addAttribute(ATTR_SUCCESS, null);
-    }
     return VIEW_SELLER_LISTINGS;
   }
 
@@ -72,8 +63,8 @@ public class SellerListingController {
   @GetMapping("/new")
   public String newListingForm(final Model model) {
     model.addAttribute("listingRequest",
-        new CreateListingRequest("", "", null, null, null, null, ""));
-    model.addAttribute("cuisineTypes", listingApiClient.getCuisineTypes());
+        new CreateListingRequest(null, null, null, null, null, null, null, null));
+    populateFormReferenceData(model);
     model.addAttribute("isEdit", false);
     model.addAttribute("formAction", "/seller/listings/new");
     return VIEW_LISTING_FORM;
@@ -85,6 +76,7 @@ public class SellerListingController {
    * @param request données saisies, validées via Bean Validation
    * @param bindingResult résultat de la validation
    * @param photo fichier photo optionnel
+   * @param model modèle Thymeleaf, nécessaire pour recharger les listes en cas d'erreur
    * @param redirectAttributes messages flash
    * @return redirection vers la liste des annonces en cas de succès
    */
@@ -93,8 +85,12 @@ public class SellerListingController {
       @Valid @ModelAttribute("listingRequest") final CreateListingRequest request,
       final BindingResult bindingResult,
       @RequestParam(required = false) final MultipartFile photo,
+      final Model model,
       final RedirectAttributes redirectAttributes) {
     if (bindingResult.hasErrors()) {
+      populateFormReferenceData(model);
+      model.addAttribute("isEdit", false);
+      model.addAttribute("formAction", "/seller/listings/new");
       return VIEW_LISTING_FORM;
     }
     var created = listingApiClient.create(request);
@@ -116,11 +112,16 @@ public class SellerListingController {
   public String editListingForm(@PathVariable final Long id, final Model model) {
     var listing = listingApiClient.getById(id);
     model.addAttribute("listingRequest", new CreateListingRequest(
-        listing.title(), listing.description(), listing.price(),
-        listing.portionsAvailable(), listing.cuisineTypeId(),
-        listing.allergenIds(), listing.city()));
+        listing.title(),
+        listing.description(),
+        listing.price(),
+        listing.portions(),
+        listing.pickupAddress(),
+        listing.pickupDatetime(),
+        listing.cuisineTypeId(),
+        listing.allergenIds()));
+    populateFormReferenceData(model);
     model.addAttribute("listingId", id);
-    model.addAttribute("cuisineTypes", listingApiClient.getCuisineTypes());
     model.addAttribute("isEdit", true);
     model.addAttribute("formAction", "/seller/listings/" + id + "/edit");
     return VIEW_LISTING_FORM;
@@ -132,6 +133,7 @@ public class SellerListingController {
    * @param id identifiant de l'annonce
    * @param request données mises à jour
    * @param bindingResult résultat de la validation
+   * @param model modèle Thymeleaf, nécessaire pour recharger les listes en cas d'erreur
    * @param redirectAttributes messages flash
    * @return redirection vers la liste des annonces en cas de succès
    */
@@ -140,12 +142,27 @@ public class SellerListingController {
       @PathVariable final Long id,
       @Valid @ModelAttribute("listingRequest") final CreateListingRequest request,
       final BindingResult bindingResult,
+      final Model model,
       final RedirectAttributes redirectAttributes) {
     if (bindingResult.hasErrors()) {
+      populateFormReferenceData(model);
+      model.addAttribute("listingId", id);
+      model.addAttribute("isEdit", true);
+      model.addAttribute("formAction", "/seller/listings/" + id + "/edit");
       return VIEW_LISTING_FORM;
     }
     listingApiClient.update(id, request);
     redirectAttributes.addFlashAttribute(ATTR_SUCCESS, "Annonce mise à jour avec succès.");
     return REDIRECT_SELLER_LISTINGS;
+  }
+
+  /**
+   * Charge les données de référence communes au formulaire d'annonce.
+   *
+   * @param model modèle Thymeleaf à enrichir
+   */
+  private void populateFormReferenceData(final Model model) {
+    model.addAttribute(ATTR_CUISINE_TYPES, listingApiClient.getCuisineTypes());
+    model.addAttribute(ATTR_ALLERGENS, listingApiClient.getAllergens());
   }
 }

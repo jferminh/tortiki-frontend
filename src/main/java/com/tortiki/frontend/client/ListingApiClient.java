@@ -1,5 +1,6 @@
 package com.tortiki.frontend.client;
 
+import com.tortiki.frontend.dto.listing.AllergenResponse;
 import com.tortiki.frontend.dto.listing.CreateListingRequest;
 import com.tortiki.frontend.dto.listing.CuisineTypeResponse;
 import com.tortiki.frontend.dto.listing.ListingDetailResponse;
@@ -77,4 +78,12 @@ public interface ListingApiClient {
    */
   @GetMapping("/api/v1/cuisine-types")
   List<CuisineTypeResponse> getCuisineTypes();
+
+  /**
+   * Liste tous les allergènes disponibles pour le formulaire.
+   *
+   * @return liste des allergènes
+   */
+  @GetMapping("/api/v1/allergens")
+  List<AllergenResponse> getAllergens();
 }
