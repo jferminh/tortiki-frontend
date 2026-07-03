@@ -75,6 +75,7 @@ public class SellerListingController {
         new CreateListingRequest("", "", null, null, null, null, ""));
     model.addAttribute("cuisineTypes", listingApiClient.getCuisineTypes());
     model.addAttribute("isEdit", false);
+    model.addAttribute("formAction", "/seller/listings/new");
     return VIEW_LISTING_FORM;
   }
 
@@ -121,6 +122,7 @@ public class SellerListingController {
     model.addAttribute("listingId", id);
     model.addAttribute("cuisineTypes", listingApiClient.getCuisineTypes());
     model.addAttribute("isEdit", true);
+    model.addAttribute("formAction", "/seller/listings/" + id + "/edit");
     return VIEW_LISTING_FORM;
   }
 

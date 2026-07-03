@@ -16,7 +16,7 @@
                 Annonce
             </h1>
 
-            <form th:action="${isEdit} ? @{/seller/listings/{id}/edit(id=${listingId})} : @{/seller/listings/new}"
+            <form th:action="@{${formAction}}"
                   th:object="${listingRequest}"
                   method="post"
                   enctype="multipart/form-data">
