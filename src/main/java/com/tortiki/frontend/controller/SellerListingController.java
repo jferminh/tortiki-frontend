@@ -38,6 +38,9 @@ public class SellerListingController {
   private static final String ATTR_SUCCESS = "success";
   private static final String ATTR_CUISINE_TYPES = "cuisineTypes";
   private static final String ATTR_ALLERGENS = "allergens";
+  private static final String ATTR_IS_EDIT = "isEdit";
+  private static final String ATTR_FORM_ACTION = "formAction";
+  private static final String ROUTE_SELLER_LISTINGS_NEW = "/seller/listings/new";
 
   private final ListingApiClient listingApiClient;
 
@@ -65,8 +68,8 @@ public class SellerListingController {
     model.addAttribute("listingRequest",
         new CreateListingRequest(null, null, null, null, null, null, null, null));
     populateFormReferenceData(model);
-    model.addAttribute("isEdit", false);
-    model.addAttribute("formAction", "/seller/listings/new");
+    model.addAttribute(ATTR_IS_EDIT, false);
+    model.addAttribute(ATTR_FORM_ACTION, ROUTE_SELLER_LISTINGS_NEW);
     return VIEW_LISTING_FORM;
   }
 
@@ -89,8 +92,8 @@ public class SellerListingController {
       final RedirectAttributes redirectAttributes) {
     if (bindingResult.hasErrors()) {
       populateFormReferenceData(model);
-      model.addAttribute("isEdit", false);
-      model.addAttribute("formAction", "/seller/listings/new");
+      model.addAttribute(ATTR_IS_EDIT, false);
+      model.addAttribute(ATTR_FORM_ACTION, ROUTE_SELLER_LISTINGS_NEW);
       return VIEW_LISTING_FORM;
     }
     var created = listingApiClient.create(request);
@@ -122,8 +125,8 @@ public class SellerListingController {
         listing.allergenIds()));
     populateFormReferenceData(model);
     model.addAttribute("listingId", id);
-    model.addAttribute("isEdit", true);
-    model.addAttribute("formAction", "/seller/listings/" + id + "/edit");
+    model.addAttribute(ATTR_IS_EDIT, true);
+    model.addAttribute(ATTR_FORM_ACTION, editFormAction(id));
     return VIEW_LISTING_FORM;
   }
 
@@ -147,8 +150,8 @@ public class SellerListingController {
     if (bindingResult.hasErrors()) {
       populateFormReferenceData(model);
       model.addAttribute("listingId", id);
-      model.addAttribute("isEdit", true);
-      model.addAttribute("formAction", "/seller/listings/" + id + "/edit");
+      model.addAttribute(ATTR_IS_EDIT, true);
+      model.addAttribute(ATTR_FORM_ACTION, editFormAction(id));
       return VIEW_LISTING_FORM;
     }
     listingApiClient.update(id, request);
@@ -164,5 +167,15 @@ public class SellerListingController {
   private void populateFormReferenceData(final Model model) {
     model.addAttribute(ATTR_CUISINE_TYPES, listingApiClient.getCuisineTypes());
     model.addAttribute(ATTR_ALLERGENS, listingApiClient.getAllergens());
+  }
+
+  /**
+   * Construit l'URL de soumission du formulaire d'édition.
+   *
+   * @param id identifiant de l'annonce
+   * @return chemin relatif du formulaire d'édition
+   */
+  private String editFormAction(final Long id) {
+    return "/seller/listings/" + id + "/edit";
   }
 }
