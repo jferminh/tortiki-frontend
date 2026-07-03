@@ -1,9 +1,12 @@
 package com.tortiki.frontend.controller;
 
 import com.tortiki.frontend.client.ListingApiClient;
+import com.tortiki.frontend.dto.listing.AllergenResponse;
 import com.tortiki.frontend.dto.listing.CreateListingRequest;
+import feign.FeignException;
 import jakarta.validation.Valid;
 import java.security.Principal;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -35,6 +38,7 @@ public class SellerListingController {
   private static final String VIEW_LISTING_FORM = "listing-form";
   private static final String VIEW_SELLER_LISTINGS = "seller-listings";
   private static final String REDIRECT_SELLER_LISTINGS = "redirect:/seller/listings";
+  /** Nom de l'attribut de modèle/flash portant le message de succès. */
   private static final String ATTR_SUCCESS = "success";
   private static final String ATTR_CUISINE_TYPES = "cuisineTypes";
   private static final String ATTR_ALLERGENS = "allergens";
@@ -161,12 +165,31 @@ public class SellerListingController {
 
   /**
    * Charge les données de référence communes au formulaire d'annonce.
+   * L'appel aux allergènes est isolé, car l'endpoint backend est en cours
+   * de stabilisation (voir Issue tortiki-api correspondante).
    *
    * @param model modèle Thymeleaf à enrichir
    */
   private void populateFormReferenceData(final Model model) {
     model.addAttribute(ATTR_CUISINE_TYPES, listingApiClient.getCuisineTypes());
-    model.addAttribute(ATTR_ALLERGENS, listingApiClient.getAllergens());
+    model.addAttribute(ATTR_ALLERGENS, safeGetAllergens());
+  }
+
+  /**
+   * Récupère la liste des allergènes en tolérant une indisponibilité
+   * temporaire de l'API (endpoint backend en cours de stabilisation).
+   *
+   * @return liste des allergènes, vide en cas d'erreur serveur
+   */
+  private List<AllergenResponse> safeGetAllergens() {
+    try {
+      return listingApiClient.getAllergens();
+    } catch (FeignException.InternalServerError feignException) {
+      log.warn(
+          "Endpoint /api/v1/allergens indisponible côté API : {}", feignException.getMessage()
+      );
+      return List.of();
+    }
   }
 
   /**
