@@ -1,95 +1,67 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
-<head>
-    <title>Tortiki — Publier une annonce</title>
-    <th:block th:replace="~{fragments/layout :: head('Publier une annonce')}"></th:block>
-</head>
-<body class="bg-light">
-
-<nav th:replace="~{fragments/layout :: navbar}"></nav>
-
-<section class="py-5">
-    <div class="container" style="max-width: 640px;">
-        <div class="card shadow-sm border-0 p-4">
-            <h1 class="h4 fw-bold mb-4"
-                th:text="${isEdit} ? 'Modifier l\'annonce' : 'Publier une nouvelle annonce'">
-                Annonce
-            </h1>
-
-            <form th:action="@{${formAction}}"
-                  th:object="${listingRequest}"
-                  method="post"
-                  enctype="multipart/form-data">
-
-                <div class="mb-3">
-                    <label for="title" class="form-label small">Titre du plat</label>
-                    <input type="text" id="title" th:field="*{title}"
-                           class="form-control"
-                           th:classappend="${#fields.hasErrors('title')} ? 'is-invalid'"/>
-                    <div class="invalid-feedback" th:errors="*{title}"></div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="description" class="form-label small">Description</label>
-                    <textarea id="description" th:field="*{description}" rows="4"
-                              class="form-control"
-                              th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"></textarea>
-                    <div class="invalid-feedback" th:errors="*{description}"></div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-6">
-                        <label for="price" class="form-label small">Prix (€)</label>
-                        <input type="number" step="0.50" id="price" th:field="*{price}"
-                               class="form-control"
-                               th:classappend="${#fields.hasErrors('price')} ? 'is-invalid'"/>
-                        <div class="invalid-feedback" th:errors="*{price}"></div>
-                    </div>
-                    <div class="col-6">
-                        <label for="portionsAvailable" class="form-label small">Portions disponibles</label>
-                        <input type="number" id="portionsAvailable" th:field="*{portionsAvailable}"
-                               class="form-control"
-                               th:classappend="${#fields.hasErrors('portionsAvailable')} ? 'is-invalid'"/>
-                        <div class="invalid-feedback" th:errors="*{portionsAvailable}"></div>
-                    </div>
-                </div>
-
-                <div class="mb-3 mt-3">
-                    <label for="cuisineTypeId" class="form-label small">Type de cuisine</label>
-                    <select id="cuisineTypeId" th:field="*{cuisineTypeId}"
-                            class="form-select"
-                            th:classappend="${#fields.hasErrors('cuisineTypeId')} ? 'is-invalid'">
-                        <option value="">Choisir un type de cuisine</option>
-                        <option th:each="cuisine : ${cuisineTypes}"
-                                th:value="${cuisine.id}"
-                                th:text="${cuisine.name}">Cuisine</option>
-                    </select>
-                    <div class="invalid-feedback" th:errors="*{cuisineTypeId}"></div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="city" class="form-label small">Ville de retrait</label>
-                    <input type="text" id="city" th:field="*{city}"
-                           class="form-control"
-                           th:classappend="${#fields.hasErrors('city')} ? 'is-invalid'"/>
-                    <div class="invalid-feedback" th:errors="*{city}"></div>
-                </div>
-
-                <div class="mb-4" th:unless="${isEdit}">
-                    <label for="photo" class="form-label small">Photo du plat</label>
-                    <input type="file" id="photo" name="photo" accept="image/*" class="form-control"/>
-                </div>
-
-                <button type="submit" class="btn btn-success w-100">
-          <span th:text="${isEdit} ? 'Enregistrer les modifications' : 'Publier l\'annonce'">
-            Publier
-          </span>
-                </button>
-            </form>
-        </div>
+<form th:action="@{${formAction}}"
+      th:object="${listingRequest}"
+      method="post"
+      enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="title" class="form-label">Titre</label>
+        <input type="text" id="title" class="form-control" th:field="*{title}">
+        <div class="invalid-feedback" th:errors="*{title}"></div>
     </div>
-</section>
 
-<footer th:replace="~{fragments/layout :: footer}"></footer>
-</body>
-</html>
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea id="description" class="form-control" rows="4" th:field="*{description}"></textarea>
+        <div class="invalid-feedback" th:errors="*{description}"></div>
+    </div>
+
+    <div class="mb-3">
+        <label for="price" class="form-label">Prix</label>
+        <input type="number" id="price" class="form-control" step="0.01" min="0.5" th:field="*{price}">
+        <div class="invalid-feedback" th:errors="*{price}"></div>
+    </div>
+
+    <div class="mb-3">
+        <label for="portions" class="form-label">Nombre de portions</label>
+        <input type="number" id="portions" class="form-control" min="1" th:field="*{portions}">
+        <div class="invalid-feedback" th:errors="*{portions}"></div>
+    </div>
+
+    <div class="mb-3">
+        <label for="pickupAddress" class="form-label">Adresse de retrait</label>
+        <input type="text" id="pickupAddress" class="form-control" th:field="*{pickupAddress}">
+        <div class="invalid-feedback" th:errors="*{pickupAddress}"></div>
+    </div>
+
+    <div class="mb-3">
+        <label for="pickupDatetime" class="form-label">Créneau de retrait</label>
+        <input type="datetime-local" id="pickupDatetime" class="form-control" th:field="*{pickupDatetime}">
+        <div class="invalid-feedback" th:errors="*{pickupDatetime}"></div>
+    </div>
+
+    <div class="mb-3">
+        <label for="cuisineTypeId" class="form-label">Type de cuisine</label>
+        <select id="cuisineTypeId" class="form-select" th:field="*{cuisineTypeId}">
+            <option value="">Sélectionner</option>
+            <option th:each="cuisineType : ${cuisineTypes}"
+                    th:value="${cuisineType.id}"
+                    th:text="${cuisineType.name}"></option>
+        </select>
+        <div class="invalid-feedback" th:errors="*{cuisineTypeId}"></div>
+    </div>
+
+    <div class="mb-3">
+        <label for="allergenIds" class="form-label">Allergènes</label>
+        <select id="allergenIds" class="form-select" th:field="*{allergenIds}" multiple>
+            <option th:each="allergen : ${allergens}"
+                    th:value="${allergen.id}"
+                    th:text="${allergen.name}"></option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="photo" class="form-label">Photo</label>
+        <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Enregistrer</button>
+</form>
