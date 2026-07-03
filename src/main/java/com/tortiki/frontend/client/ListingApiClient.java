@@ -16,15 +16,15 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * Client Feign pour la gestion des annonces vendeur.
  *
- * <p>Consommé par {@code SellerListingController} pour créer, modifier
- * et consulter les plats publiés par le vendeur connecté. L'appartenance
- * de l'annonce au vendeur est vérifiée côté API (403 si non propriétaire).</p>
+ * <p>Ce client est l'adaptateur secondaire qui isole le frontend du détail
+ * HTTP de tortiki-api. Il sert au contrôleur vendeur pour créer, modifier,
+ * consulter et téléverser la photo d'une annonce.</p>
  */
 @FeignClient(name = "listing-api", url = "${tortiki.api.url}")
 public interface ListingApiClient {
 
   /**
-   * Liste les annonces publiées par le vendeur connecté.
+   * Liste les annonces du vendeur connecté.
    *
    * @param sellerEmail email du vendeur
    * @return liste des annonces
@@ -33,7 +33,7 @@ public interface ListingApiClient {
   List<ListingDetailResponse> getMyListings(@RequestParam("seller") String sellerEmail);
 
   /**
-   * Récupère le détail d'une annonce pour édition.
+   * Récupère le détail d'une annonce par son identifiant.
    *
    * @param id identifiant de l'annonce
    * @return détail complet de l'annonce
@@ -65,7 +65,7 @@ public interface ListingApiClient {
    *
    * @param id identifiant de l'annonce
    * @param photo fichier image
-   * @return annonce mise à jour avec l'URL de la photo
+   * @return annonce mise à jour avec photo
    */
   @PostMapping(value = "/api/v1/listings/{id}/photo", consumes = "multipart/form-data")
   ListingDetailResponse uploadPhoto(@PathVariable Long id, @RequestParam MultipartFile photo);
