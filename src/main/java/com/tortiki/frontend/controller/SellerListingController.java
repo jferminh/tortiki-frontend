@@ -38,7 +38,9 @@ public class SellerListingController {
   private static final String VIEW_LISTING_FORM = "listing-form";
   private static final String VIEW_SELLER_LISTINGS = "seller-listings";
   private static final String REDIRECT_SELLER_LISTINGS = "redirect:/seller/listings";
-  /** Nom de l'attribut de modèle/flash portant le message de succès. */
+  /**
+   * Nom de l'attribut de modèle/flash portant le message de succès.
+   */
   private static final String ATTR_SUCCESS = "success";
   private static final String ATTR_CUISINE_TYPES = "cuisineTypes";
   private static final String ATTR_ALLERGENS = "allergens";
@@ -51,7 +53,7 @@ public class SellerListingController {
   /**
    * Liste les annonces publiées par le vendeur connecté.
    *
-   * @param model modèle Thymeleaf
+   * @param model     modèle Thymeleaf
    * @param principal utilisateur authentifié
    * @return nom de la vue {@code seller-listings}
    */
@@ -80,10 +82,10 @@ public class SellerListingController {
   /**
    * Traite la soumission du formulaire de création.
    *
-   * @param request données saisies, validées via Bean Validation
-   * @param bindingResult résultat de la validation
-   * @param photo fichier photo optionnel
-   * @param model modèle Thymeleaf, nécessaire pour recharger les listes en cas d'erreur
+   * @param request            données saisies, validées via Bean Validation
+   * @param bindingResult      résultat de la validation
+   * @param photo              fichier photo optionnel
+   * @param model              modèle Thymeleaf, nécessaire pour recharger listes en cas d'erreur
    * @param redirectAttributes messages flash
    * @return redirection vers la liste des annonces en cas de succès
    */
@@ -111,7 +113,7 @@ public class SellerListingController {
   /**
    * Affiche le formulaire d'édition pré-rempli d'une annonce existante.
    *
-   * @param id identifiant de l'annonce
+   * @param id    identifiant de l'annonce
    * @param model modèle Thymeleaf
    * @return nom de la vue {@code listing-form}
    */
@@ -137,10 +139,10 @@ public class SellerListingController {
   /**
    * Traite la soumission du formulaire d'édition.
    *
-   * @param id identifiant de l'annonce
-   * @param request données mises à jour
-   * @param bindingResult résultat de la validation
-   * @param model modèle Thymeleaf, nécessaire pour recharger les listes en cas d'erreur
+   * @param id                 identifiant de l'annonce
+   * @param request            données mises à jour
+   * @param bindingResult      résultat de la validation
+   * @param model              modèle Thymeleaf, nécessaire pour recharger listes en cas d'erreur
    * @param redirectAttributes messages flash
    * @return redirection vers la liste des annonces en cas de succès
    */

@@ -5,8 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Détail complet d'une annonce, utilisé pour préremplir
- * le formulaire d'édition.
+ * Détail complet d'une annonce, utilisé pour préremplir le formulaire d'édition.
  *
  * @param id identifiant de l'annonce
  * @param title titre du plat
@@ -15,7 +14,8 @@ import java.util.List;
  * @param portions portions disponibles
  * @param cuisineTypeId type de cuisine
  * @param allergenIds allergènes présents
- * @param pickupAddress ville de retrait
+ * @param pickupAddress adresse de retrait
+ * @param pickupDatetime créneau de retrait
  * @param photoUrl URL de la photo actuelle
  */
 public record ListingDetailResponse(

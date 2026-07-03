@@ -10,16 +10,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Données de création d'une annonce, saisies par le vendeur.
+ * Données de création ou modification d'une annonce, saisies par le vendeur.
  *
- * @param title titre du plat
- * @param description description détaillée
- * @param price prix unitaire en euros
- * @param portions nombre de portions disponibles
- * @param pickupAddress adresse complète de retrait
+ * @param title          titre du plat
+ * @param description    description détaillée
+ * @param price          prix unitaire en euros
+ * @param portions       nombre de portions disponibles
+ * @param pickupAddress  adresse complète de retrait
  * @param pickupDatetime créneau de retrait
- * @param cuisineTypeId identifiant du type de cuisine
- * @param allergenIds identifiants des allergènes présents
+ * @param cuisineTypeId  identifiant du type de cuisine
+ * @param allergenIds    identifiants des allergènes présents
  */
 public record CreateListingRequest(
     @NotBlank(message = "Le titre est obligatoire")
@@ -47,4 +47,12 @@ public record CreateListingRequest(
     Long cuisineTypeId,
 
     List<Long> allergenIds
-) {}
+) {
+
+  /**
+   * Constructeur compact : normalise {@code allergenIds} en liste vide si null.
+   */
+  public CreateListingRequest {
+    allergenIds = allergenIds != null ? allergenIds : List.of();
+  }
+}
