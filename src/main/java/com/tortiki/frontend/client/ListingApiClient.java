@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -69,7 +70,9 @@ public interface ListingApiClient {
    * @return annonce mise à jour avec photo
    */
   @PostMapping(value = "/api/v1/listings/{id}/photo", consumes = "multipart/form-data")
-  ListingDetailResponse uploadPhoto(@PathVariable Long id, @RequestParam MultipartFile photo);
+  ListingDetailResponse uploadPhoto(
+      @PathVariable Long id,
+      @RequestPart("photo") MultipartFile photo);
 
   /**
    * Liste tous les types de cuisine disponibles pour le formulaire.
