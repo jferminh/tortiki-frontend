@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,13 +25,18 @@ import org.springframework.web.multipart.MultipartFile;
 public interface ListingApiClient {
 
   /**
-   * Liste les annonces du vendeur connecté.
+   * Liste toutes les annonces du vendeur connecté, tous statuts confondus.
    *
-   * @param sellerEmail email du vendeur
-   * @return liste des annonces
+   * <p>L'identité du vendeur n'est jamais transmise en paramètre : elle est
+   * résolue côté {@code tortiki-api} depuis le cookie de session propagé
+   * par {@code FeignConfig#sessionCookieInterceptor}. Ce choix élimine
+   * toute possibilité d'IDOR (OWASP A01) qu'aurait permis un email de
+   * vendeur passé librement en paramètre de requête.</p>
+   *
+   * @return liste des annonces du vendeur authentifié
    */
   @GetMapping("/api/v1/seller-listings")
-  List<ListingDetailResponse> getMyListings(@RequestParam("seller") String sellerEmail);
+  List<ListingDetailResponse> getMyListings();
 
   /**
    * Récupère le détail d'une annonce par son identifiant.
