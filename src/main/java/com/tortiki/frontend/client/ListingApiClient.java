@@ -63,13 +63,17 @@ public interface ListingApiClient {
   ListingDetailResponse update(@PathVariable Long id, @RequestBody CreateListingRequest request);
 
   /**
-   * Téléverse la photo associée à une annonce.
+   * Téléverse ou remplace la photo associée à une annonce existante.
+   *
+   * <p>Aligné sur {@code ListingController#updatePhoto} côté tortiki-api,
+   * qui expose cet endpoint en {@code PUT} — sémantique REST correcte
+   * pour le remplacement d'une ressource déjà créée.</p>
    *
    * @param id identifiant de l'annonce
-   * @param photo fichier image
+   * @param photo fichier image transmis en tant que partie multipart
    * @return annonce mise à jour avec photo
    */
-  @PostMapping(value = "/api/v1/listings/{id}/photo", consumes = "multipart/form-data")
+  @PutMapping(value = "/api/v1/listings/{id}/photo", consumes = "multipart/form-data")
   ListingDetailResponse uploadPhoto(
       @PathVariable Long id,
       @RequestPart("photo") MultipartFile photo);
