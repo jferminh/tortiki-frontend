@@ -5,7 +5,9 @@ import com.tortiki.frontend.dto.user.AuthResponse;
 import com.tortiki.frontend.dto.user.LoginRequest;
 import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -33,8 +35,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  *       la réponse HTTP.</li>
  *   <li>Stocke ce cookie dans la session HTTP du frontend, pour que
  *       {@code FeignConfig} le réinjecte lors des appels Feign suivants.</li>
- *   <li>Construit une {@code Authentication} Spring Security avec le rôle
- *       reçu depuis l'API.</li>
+ *   <li>Construit une {@code Authentication} Spring Security avec les rôles
+ *       reçus depuis l'API.</li>
  * </ol>
  *
  * <p>Sécurité : le cookie API n'est jamais transmis au navigateur — il reste
@@ -46,10 +48,19 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @RequiredArgsConstructor
 public class ApiDelegatingAuthenticationProvider implements AuthenticationProvider {
 
-  /** Nom de l'attribut de session stockant le cookie de session API. */
+  /**
+   * Nom de l'attribut de session stockant le cookie de session API.
+   */
   public static final String SESSION_ATTR_API_COOKIE = "API_SESSION_COOKIE";
 
-  /** Client Feign vers les endpoints d'authentification de l'API. */
+  /**
+   * Préfixe standard Spring Security pour les autorités de rôle.
+   */
+  private static final String ROLE_PREFIX = "ROLE_";
+
+  /**
+   * Client Feign vers les endpoints d'authentification de l'API.
+   */
   private final AuthApiClient authApiClient;
 
   /**
@@ -57,9 +68,9 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
    * puis relie la session frontend à la session API via le cookie reçu.
    *
    * @param authentication jeton contenant email (principal) et mot de passe (credentials)
-   * @return authentification complète avec rôle attribué par l'API
+   * @return authentification complète avec rôles attribués par l'API
    * @throws AuthenticationException si les identifiants sont invalides
-   *     ou si l'API est injoignable
+   *                                 ou si l'API est injoignable
    */
   @Override
   public Authentication authenticate(final Authentication authentication)
@@ -87,11 +98,56 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
       throw new AuthenticationServiceException("Réponse d'authentification vide.");
     }
 
+    List<SimpleGrantedAuthority> authorities = buildAuthorities(body.roles());
+
     return new UsernamePasswordAuthenticationToken(
         email,
         password,
-        List.of(new SimpleGrantedAuthority("ROLE_" + body.role()))
+        authorities
     );
+  }
+
+  /**
+   * Convertit la collection de rôles renvoyée par l'API
+   * en autorités Spring Security.
+   *
+   * @param roles rôles fonctionnels renvoyés par l'API
+   * @return autorités Spring Security normalisées
+   */
+  private List<SimpleGrantedAuthority> buildAuthorities(final Collection<String> roles) {
+    if (roles == null || roles.isEmpty()) {
+      throw new AuthenticationServiceException(
+          "Réponse d'authentification sans rôle exploitable.");
+    }
+
+    List<SimpleGrantedAuthority> authorities = roles.stream()
+        .filter(Objects::nonNull)
+        .map(String::trim)
+        .filter(role -> !role.isBlank())
+        .map(this::normalizeRole)
+        .distinct()
+        .map(SimpleGrantedAuthority::new)
+        .toList();
+
+    if (authorities.isEmpty()) {
+      throw new AuthenticationServiceException(
+          "Réponse d'authentification sans rôle exploitable.");
+    }
+
+    return authorities;
+  }
+
+  /**
+   * Normalise un rôle pour respecter le format attendu par Spring Security.
+   *
+   * @param role rôle brut retourné par l'API
+   * @return rôle préfixé par {@code ROLE_} si nécessaire
+   */
+  private String normalizeRole(final String role) {
+    if (role.startsWith(ROLE_PREFIX)) {
+      return role;
+    }
+    return ROLE_PREFIX + role;
   }
 
   /**
