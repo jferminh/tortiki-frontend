@@ -8,13 +8,22 @@ spring:
   mvc:
     hiddenmethod:
       filter:
-        enabled: true   # active PUT/DELETE depuis les formulaires HTML
+        enabled: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB         # Limite raisonnable pour une photo de plat
+      max-request-size: 8MB      # Marge pour photo + champs texte + allergènes
+      file-size-threshold: 2KB   # Écrit sur disque au-delà (évite la RAM pour gros fichiers)# active PUT/DELETE depuis les formulaires HTML
 
 server:
   port: 8081  # l'API tourne sur 8080, le frontend sur 8081
   error:
     whitelabel:
-      enabled: false  # on gère nos propres pages d'erreur
+      enabled: false
+  tomcat:
+    max-part-count: 30
+    max-part-header-size: 2048
 
 management:
   endpoints:
