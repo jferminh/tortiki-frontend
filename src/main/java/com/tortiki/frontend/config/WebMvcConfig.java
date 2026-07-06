@@ -77,16 +77,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Override
   public void addResourceHandlers(final ResourceHandlerRegistry registry) {
     registry.addResourceHandler(ROUTE_CSS)
-      .addResourceLocations(staticRootPath + "css/");
+        .addResourceLocations(staticRootPath + "css/");
 
     registry.addResourceHandler(ROUTE_JS)
-      .addResourceLocations(staticRootPath + "js/");
+        .addResourceLocations(staticRootPath + "js/");
 
     registry.addResourceHandler(ROUTE_IMAGES)
-      .addResourceLocations(staticRootPath + "images/");
+        .addResourceLocations(staticRootPath + "images/");
 
     registry.addResourceHandler(ROUTE_WEBJARS)
-      .addResourceLocations("classpath:/META-INF/resources/webjars/");
+        .addResourceLocations("classpath:/META-INF/resources/webjars/");
   }
 
   /**
@@ -119,7 +119,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Bean
   public MessageSource messageSource() {
     ReloadableResourceBundleMessageSource source =
-      new ReloadableResourceBundleMessageSource();
+        new ReloadableResourceBundleMessageSource();
     source.setBasename(messageBasename);
     source.setDefaultEncoding(MESSAGE_ENCODING);
     source.setUseCodeAsDefaultMessage(true);

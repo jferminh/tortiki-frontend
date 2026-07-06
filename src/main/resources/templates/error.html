@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Erreur')}">
+    <title>Tortiki — Erreur</title>
+</head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-5 text-center">
+    <h1 class="h3 fw-bold text-danger mb-3"
+        th:text="${status} + ' — Une erreur est survenue'">Erreur</h1>
+    <p class="text-muted mb-4"
+       th:text="${message != null} ? ${message} : 'Veuillez réessayer ou contacter le support.'">
+        Message d'erreur
+    </p>
+    <a th:href="@{/}" class="btn btn-success">Retour à l'accueil</a>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
