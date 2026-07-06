@@ -5,7 +5,6 @@ import com.tortiki.frontend.dto.listing.AllergenResponse;
 import com.tortiki.frontend.dto.listing.CreateListingRequest;
 import feign.FeignException;
 import jakarta.validation.Valid;
-import java.security.Principal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,15 +50,19 @@ public class SellerListingController {
   private final ListingApiClient listingApiClient;
 
   /**
-   * Liste les annonces publiées par le vendeur connecté.
+   * Liste les annonces publiées par le vendeur connecté, tous statuts confondus.
    *
-   * @param model     modèle Thymeleaf
-   * @param principal utilisateur authentifié
+   * <p>L'identité du vendeur n'est plus extraite du {@code Principal} local :
+   * elle est résolue côté {@code tortiki-api} depuis le cookie de session
+   * relayé par Feign (voir {@code FeignConfig#sessionCookieInterceptor}
+   * et {@code SellerListingController} de tortiki-api).</p>
+   *
+   * @param model modèle Thymeleaf
    * @return nom de la vue {@code seller-listings}
    */
   @GetMapping
-  public String myListings(final Model model, final Principal principal) {
-    model.addAttribute("listings", listingApiClient.getMyListings(principal.getName()));
+  public String myListings(final Model model) {
+    model.addAttribute("listings", listingApiClient.getMyListings());
     return VIEW_SELLER_LISTINGS;
   }
 
