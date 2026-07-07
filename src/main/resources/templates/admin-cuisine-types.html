@@ -18,12 +18,15 @@
                 <h2 class="h6 mb-3">Ajouter un type de cuisine</h2>
                 <form th:action="@{/admin/cuisine-types}" th:object="${createCuisineTypeRequest}" method="post" class="row g-2">
                     <div class="col-md-4">
-                        <input type="text" th:field="*{name}" class="form-control"
+                        <label for="cuisineTypeName" class="form-label visually-hidden">Nom du type de cuisine</label>
+                        <input type="text" id="cuisineTypeName" th:field="*{name}" class="form-control"
                                th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'" placeholder="Nom"/>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
                     </div>
                     <div class="col-md-6">
-                        <input type="text" th:field="*{description}" class="form-control" placeholder="Description"/>
+                        <label for="cuisineTypeDescription" class="form-label visually-hidden">Description du type de cuisine</label>
+                        <input type="text" id="cuisineTypeDescription" th:field="*{description}" class="form-control"
+                               placeholder="Description"/>
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-success w-100">Ajouter</button>
