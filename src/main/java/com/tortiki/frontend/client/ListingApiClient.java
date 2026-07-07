@@ -6,6 +6,7 @@ import com.tortiki.frontend.dto.listing.CuisineTypeResponse;
 import com.tortiki.frontend.dto.listing.ListingDetailResponse;
 import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
  *
  * <p>Ce client est l'adaptateur secondaire qui isole le frontend du détail
  * HTTP de tortiki-api. Il sert au contrôleur vendeur pour créer, modifier,
- * consulter et téléverser la photo d'une annonce.</p>
+ * consulter, désactiver et téléverser la photo d'une annonce.</p>
  */
 @FeignClient(name = "listing-api", url = "${tortiki.api.url}")
 public interface ListingApiClient {
@@ -65,6 +66,19 @@ public interface ListingApiClient {
    */
   @PutMapping("/api/v1/listings/{id}")
   ListingDetailResponse update(@PathVariable Long id, @RequestBody CreateListingRequest request);
+
+  /**
+   * Désactive une annonce (suppression logique — statut {@code INACTIVE}).
+   *
+   * <p>Aligné sur {@code ManageListingUseCase#delete} côté tortiki-api :
+   * l'annonce n'est jamais supprimée physiquement, seul son statut change.
+   * L'autorisation (vendeur propriétaire uniquement) est vérifiée côté API
+   * via {@code UnauthorizedActionException}.</p>
+   *
+   * @param id identifiant de l'annonce à désactiver
+   */
+  @DeleteMapping("/api/v1/listings/{id}")
+  void delete(@PathVariable Long id);
 
   /**
    * Téléverse ou remplace la photo associée à une annonce existante.
