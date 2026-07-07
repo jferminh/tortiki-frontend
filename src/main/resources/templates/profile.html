@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:replace="fragments/layout :: head(title='Mon profil')">Tortiki - Mon profil</title>
+</head>
+<body class="bg-light">
+<nav th:replace="fragments/layout :: navbar"></nav>
+
+<section class="py-5">
+    <div class="container" style="max-width: 640px;">
+        <h1 class="h4 fw-bold mb-4">Mon profil</h1>
+
+        <div th:if="${success} != null" class="alert alert-success small" th:text="${success}"></div>
+
+        <div class="card shadow-sm border-0 p-4">
+            <form th:action="@{/profile/update}" th:object="${updateUserProfileRequest}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="mb-3">
+                    <label for="firstName" class="form-label">Prénom</label>
+                    <input type="text" id="firstName" class="form-control"
+                           th:field="*{firstName}"
+                           th:class="${#fields.hasErrors('firstName')} ? 'form-control is-invalid' : 'form-control'"/>
+                    <div class="invalid-feedback" th:errors="*{firstName}"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="lastName" class="form-label">Nom</label>
+                    <input type="text" id="lastName" class="form-control"
+                           th:field="*{lastName}"
+                           th:class="${#fields.hasErrors('lastName')} ? 'form-control is-invalid' : 'form-control'"/>
+                    <div class="invalid-feedback" th:errors="*{lastName}"></div>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Enregistrer les modifications</button>
+            </form>
+        </div>
+
+        <div class="card shadow-sm border-0 p-4 mt-4">
+            <h2 class="h6 fw-semibold mb-3">Informations du compte</h2>
+            <p class="small text-muted mb-1">Email : <span th:text="${profile.email}"></span></p>
+            <p class="small text-muted mb-0">Rôle : <span th:text="${profile.role}"></span></p>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="fragments/layout :: footer"></footer>
+</body>
+</html>
