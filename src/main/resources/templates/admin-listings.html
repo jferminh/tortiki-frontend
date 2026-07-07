@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Tortiki - Modération des annonces</title>
+    <th:block th:replace="~{fragments/layout :: head(title='Modération des annonces')}"></th:block>
+</head>
+<body class="bg-light">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<section class="py-5">
+    <div class="container">
+        <h1 class="h4 fw-bold mb-4">Modération des annonces</h1>
+
+        <div th:if="${success != null}" class="alert alert-success small" th:text="${success}"></div>
+
+        <div class="table-responsive">
+            <table class="table align-middle bg-white shadow-sm">
+                <thead>
+                <tr>
+                    <th>Plat</th>
+                    <th>Vendeur</th>
+                    <th>Ville</th>
+                    <th>Prix</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="listing : ${listings}">
+                    <td th:text="${listing.title}">Plat</td>
+                    <td th:text="${listing.sellerEmail}">Vendeur</td>
+                    <td th:text="${listing.city}">Ville</td>
+                    <td th:text="${listing.price}">Prix</td>
+                    <td>
+            <span class="badge" th:class="${listing.status == 'ACTIVE'} ? 'badge bg-success' : 'badge bg-secondary'"
+                  th:text="${listing.status}">STATUT</span>
+                    </td>
+                    <td>
+                        <form th:action="@{/admin/listings/{id}/status(id=${listing.id})}" method="post" class="d-inline">
+                            <input type="hidden" name="newStatus"
+                                   th:value="${listing.status == 'ACTIVE'} ? 'INACTIVE' : 'ACTIVE'"/>
+                            <button type="submit" class="btn btn-sm"
+                                    th:class="${listing.status == 'ACTIVE'} ? 'btn btn-outline-danger btn-sm' : 'btn btn-outline-success btn-sm'"
+                                    th:text="${listing.status == 'ACTIVE'} ? 'Désactiver' : 'Réactiver'">Action</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center text-muted py-5" th:if="${#lists.isEmpty(listings)}">
+            <p class="mb-0">Aucune annonce à modérer pour le moment.</p>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

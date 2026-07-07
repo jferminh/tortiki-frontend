@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Tortiki - Types de cuisine</title>
+    <th:block th:replace="~{fragments/layout :: head(title='Types de cuisine')}"></th:block>
+</head>
+<body class="bg-light">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<section class="py-5">
+    <div class="container">
+        <h1 class="h4 fw-bold mb-4">Référentiel des types de cuisine</h1>
+
+        <div th:if="${success != null}" class="alert alert-success small" th:text="${success}"></div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Ajouter un type de cuisine</h2>
+                <form th:action="@{/admin/cuisine-types}" th:object="${createCuisineTypeRequest}" method="post" class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text" th:field="*{name}" class="form-control"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'" placeholder="Nom"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" th:field="*{description}" class="form-control" placeholder="Description"/>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success w-100">Ajouter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle bg-white shadow-sm">
+                <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cuisine : ${cuisineTypes}">
+                    <td th:text="${cuisine.name}">Nom</td>
+                    <td th:text="${cuisine.description}">Description</td>
+                    <td>
+                        <form th:action="@{/admin/cuisine-types/{id}/delete(id=${cuisine.id})}" method="post"
+                              onsubmit="return confirm('Supprimer ce type de cuisine ?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center text-muted py-5" th:if="${#lists.isEmpty(cuisineTypes)}">
+            <p class="mb-0">Aucun type de cuisine enregistré.</p>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Tortiki - Administration</title>
+    <th:block th:replace="~{fragments/layout :: head(title='Administration')}"></th:block>
+</head>
+<body class="bg-light">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<section class="py-5">
+    <div class="container">
+        <h1 class="h4 fw-bold mb-4">Tableau de bord administrateur</h1>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h2 class="h6 text-muted mb-2">Annonces totales</h2>
+                        <p class="display-6 fw-bold mb-0" th:text="${#lists.size(listings)}">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h2 class="h6 text-muted mb-2">Types de cuisine</h2>
+                        <p class="display-6 fw-bold mb-0" th:text="${#lists.size(cuisineTypes)}">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a th:href="@{/admin/listings}" class="btn btn-success">Modérer les annonces</a>
+            <a th:href="@{/admin/cuisine-types}" class="btn btn-outline-success">Gérer les types de cuisine</a>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
