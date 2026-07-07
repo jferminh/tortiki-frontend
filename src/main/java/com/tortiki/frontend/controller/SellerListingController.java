@@ -169,6 +169,35 @@ public class SellerListingController {
   }
 
   /**
+   * Désactive une annonce (suppression logique, statut {@code INACTIVE}).
+   *
+   * <p>Exposée en {@code POST} plutôt qu'en vrai {@code DELETE} HTTP :
+   * un formulaire HTML natif ne supporte que {@code GET}/{@code POST}, et
+   * aucun {@code HiddenHttpMethodFilter} n'est configuré dans ce projet.
+   * Ce choix évite d'introduire un filtre global supplémentaire pour un
+   * seul cas d'usage — cohérent avec {@link #createListing} et
+   * {@link #updateListing}, également exposées en {@code POST}.</p>
+   *
+   * <p>Aucune vérification d'autorisation n'est effectuée ici : si Sofia
+   * tentait de désactiver l'annonce d'un autre vendeur, {@code tortiki-api}
+   * répondrait par une {@code UnauthorizedActionException} (403), déjà
+   * gérée par {@code GlobalExceptionHandler}.</p>
+   *
+   * @param id                 identifiant de l'annonce à désactiver
+   * @param redirectAttributes message flash affiché après redirection
+   * @return redirection vers la liste des annonces
+   */
+  @PostMapping("/{id}/delete")
+  public String deleteListing(
+      @PathVariable final Long id,
+      final RedirectAttributes redirectAttributes) {
+    listingApiClient.delete(id);
+    log.debug("Annonce id={} désactivée par le vendeur connecté", id);
+    redirectAttributes.addFlashAttribute(ATTR_SUCCESS, "Annonce désactivée avec succès.");
+    return REDIRECT_SELLER_LISTINGS;
+  }
+
+  /**
    * Charge les données de référence communes au formulaire d'annonce.
    * L'appel aux allergènes est isolé, car l'endpoint backend est en cours
    * de stabilisation (voir Issue tortiki-api correspondante).
