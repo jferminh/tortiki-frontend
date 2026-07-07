@@ -122,14 +122,13 @@ public class AdminController {
       @Valid @ModelAttribute(ATTR_CREATE_CUISINE_TYPE_REQUEST)
       final CreateCuisineTypeRequest request,
       final BindingResult bindingResult,
+      final Model model,
       final RedirectAttributes redirectAttributes) {
+
     if (bindingResult.hasErrors()) {
       log.warn("Erreurs de validation à la création d'un type de cuisine");
-      redirectAttributes.addFlashAttribute(
-          "org.springframework.validation.BindingResult." + ATTR_CREATE_CUISINE_TYPE_REQUEST,
-          bindingResult);
-      redirectAttributes.addFlashAttribute(ATTR_CREATE_CUISINE_TYPE_REQUEST, request);
-      return REDIRECT_ADMIN_CUISINE_TYPES;
+      model.addAttribute(ATTR_CUISINE_TYPES, searchApiClient.getCuisineTypes());
+      return VIEW_CUISINE_TYPES;
     }
     adminApiClient.createCuisineType(request);
     log.info("Type de cuisine créé : {}", request.name());
