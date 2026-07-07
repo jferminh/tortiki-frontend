@@ -5,7 +5,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Détail complet d'une annonce, utilisé pour préremplir le formulaire d'édition.
+ * Détail complet d'une annonce.
+ *
+ * <p>Utilisé pour deux usages distincts : préremplir le formulaire
+ * d'édition ({@code SellerListingController#editListingForm}) et
+ * afficher le dashboard vendeur avec badge de statut
+ * ({@code SellerListingController#myListings}).</p>
  *
  * @param id identifiant de l'annonce
  * @param title titre du plat
@@ -17,6 +22,7 @@ import java.util.List;
  * @param pickupAddress adresse de retrait
  * @param pickupDatetime créneau de retrait
  * @param photoUrl URL de la photo actuelle
+ * @param status statut de l'annonce ({@code ACTIVE}, {@code INACTIVE}, {@code MODERATED})
  */
 public record ListingDetailResponse(
     Long id,
@@ -28,5 +34,6 @@ public record ListingDetailResponse(
     List<Long> allergenIds,
     String pickupAddress,
     LocalDateTime pickupDatetime,
-    String photoUrl
+    String photoUrl,
+    String status
 ) {}
