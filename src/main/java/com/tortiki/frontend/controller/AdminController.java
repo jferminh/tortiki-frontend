@@ -70,6 +70,9 @@ public class AdminController {
   public String listings(final Model model) {
     log.info("Chargement de la modération des annonces");
     model.addAttribute(ATTR_LISTINGS, adminApiClient.getAllListings());
+    if (!model.containsAttribute(ATTR_SUCCESS)) {
+      model.addAttribute(ATTR_SUCCESS, null);
+    }
     return VIEW_LISTINGS;
   }
 
@@ -105,6 +108,9 @@ public class AdminController {
       model.addAttribute(ATTR_CREATE_CUISINE_TYPE_REQUEST,
           new CreateCuisineTypeRequest("", ""));
     }
+    if (!model.containsAttribute(ATTR_SUCCESS)) {
+      model.addAttribute(ATTR_SUCCESS, null);
+    }
     model.addAttribute(ATTR_CUISINE_TYPES, searchApiClient.getCuisineTypes());
     return VIEW_CUISINE_TYPES;
   }
@@ -127,6 +133,7 @@ public class AdminController {
 
     if (bindingResult.hasErrors()) {
       log.warn("Erreurs de validation à la création d'un type de cuisine");
+      model.addAttribute(ATTR_SUCCESS, null);
       model.addAttribute(ATTR_CUISINE_TYPES, searchApiClient.getCuisineTypes());
       return VIEW_CUISINE_TYPES;
     }
