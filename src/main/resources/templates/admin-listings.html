@@ -9,15 +9,19 @@
 
 <section class="py-5">
     <div class="container">
-        <h1 class="h4 fw-bold mb-4">Modération des annonces</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h4 fw-bold mb-0">Modération des annonces</h1>
+            <a th:href="@{/admin}" class="btn btn-outline-secondary btn-sm">Retour au dashboard</a>
+        </div>
 
-        <div th:if="${success != null}" class="alert alert-success small" th:text="${success}"></div>
+        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
 
         <div class="table-responsive">
             <table class="table align-middle bg-white shadow-sm">
                 <thead>
                 <tr>
-                    <th>Plat</th>
+                    <th>Photo</th>
+                    <th>Titre</th>
                     <th>Vendeur</th>
                     <th>Ville</th>
                     <th>Prix</th>
@@ -27,30 +31,37 @@
                 </thead>
                 <tbody>
                 <tr th:each="listing : ${listings}">
-                    <td th:text="${listing.title}">Plat</td>
-                    <td th:text="${listing.sellerEmail}">Vendeur</td>
-                    <td th:text="${listing.city}">Ville</td>
-                    <td th:text="${listing.price}">Prix</td>
                     <td>
-            <span class="badge" th:class="${listing.status == 'ACTIVE'} ? 'badge bg-success' : 'badge bg-secondary'"
+                        <img th:if="${listing.photoUrl}" th:src="${listing.photoUrl}"
+                             alt="Photo du plat" class="rounded" style="width:56px;height:56px;object-fit:cover;">
+                        <span th:unless="${listing.photoUrl}" class="text-muted small">Aucune</span>
+                    </td>
+                    <td th:text="${listing.title}">Titre</td>
+                    <td th:text="${listing.sellerEmail}">vendeur@tortiki.fr</td>
+                    <td th:text="${listing.city}">Nancy</td>
+                    <td th:text="${listing.price} + ' €'">0.00 €</td>
+                    <td>
+            <span class="badge"
+                  th:classappend="${listing.status == 'ACTIVE'} ? 'bg-success' : 'bg-secondary'"
                   th:text="${listing.status}">STATUT</span>
                     </td>
                     <td>
-                        <form th:action="@{/admin/listings/{id}/status(id=${listing.id})}" method="post" class="d-inline">
-                            <input type="hidden" name="newStatus"
-                                   th:value="${listing.status == 'ACTIVE'} ? 'INACTIVE' : 'ACTIVE'"/>
-                            <button type="submit" class="btn btn-sm"
-                                    th:class="${listing.status == 'ACTIVE'} ? 'btn btn-outline-danger btn-sm' : 'btn btn-outline-success btn-sm'"
-                                    th:text="${listing.status == 'ACTIVE'} ? 'Désactiver' : 'Réactiver'">Action</button>
+                        <form th:action="@{/admin/listings/{id}/status(id=${listing.id})}" method="post" class="d-flex gap-1">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" name="newStatus" value="ACTIVE"
+                                    class="btn btn-sm btn-outline-success"
+                                    th:disabled="${listing.status == 'ACTIVE'}">Activer</button>
+                            <button type="submit" name="newStatus" value="INACTIVE"
+                                    class="btn btn-sm btn-outline-danger"
+                                    th:disabled="${listing.status == 'INACTIVE'}">Désactiver</button>
                         </form>
                     </td>
                 </tr>
+                <tr th:if="${#lists.isEmpty(listings)}">
+                    <td colspan="7" class="text-center text-muted py-4">Aucune annonce à modérer.</td>
+                </tr>
                 </tbody>
             </table>
-        </div>
-
-        <div class="text-center text-muted py-5" th:if="${#lists.isEmpty(listings)}">
-            <p class="mb-0">Aucune annonce à modérer pour le moment.</p>
         </div>
     </div>
 </section>
