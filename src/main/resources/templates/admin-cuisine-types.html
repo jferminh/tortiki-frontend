@@ -8,31 +8,37 @@
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
 <section class="py-5">
-    <div class="container">
-        <h1 class="h4 fw-bold mb-4">Référentiel des types de cuisine</h1>
+    <div class="container" style="max-width: 800px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h4 fw-bold mb-0">Référentiel des types de cuisine</h1>
+            <a th:href="@{/admin}" class="btn btn-outline-secondary btn-sm">Retour au dashboard</a>
+        </div>
 
-        <div th:if="${success != null}" class="alert alert-success small" th:text="${success}"></div>
+        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
 
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body">
-                <h2 class="h6 mb-3">Ajouter un type de cuisine</h2>
-                <form th:action="@{/admin/cuisine-types}" th:object="${createCuisineTypeRequest}" method="post" class="row g-2">
-                    <div class="col-md-4">
-                        <label for="cuisineTypeName" class="form-label visually-hidden">Nom du type de cuisine</label>
-                        <input type="text" id="cuisineTypeName" th:field="*{name}" class="form-control"
-                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'" placeholder="Nom"/>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="cuisineTypeDescription" class="form-label visually-hidden">Description du type de cuisine</label>
-                        <input type="text" id="cuisineTypeDescription" th:field="*{description}" class="form-control"
-                               placeholder="Description"/>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-success w-100">Ajouter</button>
-                    </div>
-                </form>
-            </div>
+        <div class="card shadow-sm border-0 p-4 mb-4">
+            <h2 class="h6 fw-bold mb-3">Ajouter un type de cuisine</h2>
+            <form th:action="@{/admin/cuisine-types}" th:object="${createCuisineTypeRequest}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nom</label>
+                    <input type="text" id="name" class="form-control"
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                           th:field="*{name}">
+                    <div class="invalid-feedback" th:errors="*{name}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" class="form-control" rows="2"
+                              th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
+                              th:field="*{description}"></textarea>
+                    <div class="invalid-feedback" th:errors="*{description}"></div>
+                </div>
+
+                <button type="submit" class="btn btn-success">Créer</button>
+            </form>
         </div>
 
         <div class="table-responsive">
@@ -41,26 +47,31 @@
                 <tr>
                     <th>Nom</th>
                     <th>Description</th>
+                    <th>Actif</th>
                     <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="cuisine : ${cuisineTypes}">
-                    <td th:text="${cuisine.name}">Nom</td>
-                    <td th:text="${cuisine.description}">Description</td>
+                <tr th:each="cuisineType : ${cuisineTypes}">
+                    <td th:text="${cuisineType.name}">Nom</td>
+                    <td th:text="${cuisineType.description}">Description</td>
                     <td>
-                        <form th:action="@{/admin/cuisine-types/{id}/delete(id=${cuisine.id})}" method="post"
-                              onsubmit="return confirm('Supprimer ce type de cuisine ?');">
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer</button>
+            <span class="badge" th:classappend="${cuisineType.enabled} ? 'bg-success' : 'bg-secondary'"
+                  th:text="${cuisineType.enabled} ? 'Oui' : 'Non'">Statut</span>
+                    </td>
+                    <td>
+                        <form th:action="@{/admin/cuisine-types/{id}/delete(id=${cuisineType.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Confirmer la suppression ?');">Supprimer</button>
                         </form>
                     </td>
                 </tr>
+                <tr th:if="${#lists.isEmpty(cuisineTypes)}">
+                    <td colspan="4" class="text-center text-muted py-4">Aucun type de cuisine.</td>
+                </tr>
                 </tbody>
             </table>
-        </div>
-
-        <div class="text-center text-muted py-5" th:if="${#lists.isEmpty(cuisineTypes)}">
-            <p class="mb-0">Aucun type de cuisine enregistré.</p>
         </div>
     </div>
 </section>
