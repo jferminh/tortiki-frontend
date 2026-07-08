@@ -81,7 +81,7 @@ class SellerListingControllerTest {
         "ACTIVE");
 
     when(listingApiClient.getCuisineTypes())
-        .thenReturn(List.of(new CuisineTypeResponse(1L, "Ukrainienne", true)));
+        .thenReturn(List.of(new CuisineTypeResponse(1L, "Ukrainienne", "Plat traditionnel ukrainienne", true)));
     when(listingApiClient.getAllergens())
         .thenReturn(List.of(new AllergenResponse(1L, "Gluten")));
   }
