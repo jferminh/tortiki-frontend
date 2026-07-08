@@ -1,0 +1,19 @@
+<!-- templates/error/403.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <th:block th:replace="~{fragments/layout :: head(title='Accès refusé')}"></th:block>
+</head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-5 text-center">
+    <h1 class="display-1 fw-bold text-danger">403</h1>
+    <p class="h4 mb-3">Accès refusé.</p>
+    <p class="text-muted mb-4">Vous n'avez pas les droits nécessaires pour accéder à cette page.</p>
+    <a th:href="@{/}" class="btn btn-outline-success">Retour à l'accueil</a>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

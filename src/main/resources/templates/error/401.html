@@ -1,0 +1,19 @@
+<!-- templates/error/401.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <th:block th:replace="~{fragments/layout :: head(title='Non authentifié')}"></th:block>
+</head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-5 text-center">
+    <h1 class="display-1 fw-bold text-warning">401</h1>
+    <p class="h4 mb-3">Vous devez être connecté.</p>
+    <p class="text-muted mb-4">Merci de vous reconnecter pour accéder à cette ressource.</p>
+    <a th:href="@{/login}" class="btn btn-success">Se connecter</a>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
