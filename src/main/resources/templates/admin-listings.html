@@ -33,7 +33,7 @@
                 <tr th:each="listing : ${listings}">
                     <td>
                         <img th:if="${listing.photoUrl}" th:src="${listing.photoUrl}"
-                             alt="Photo du plat" class="rounded" style="width:56px;height:56px;object-fit:cover;">
+                             th:alt="${listing.title}" class="rounded" style="width:56px;height:56px;object-fit:cover;">
                         <span th:unless="${listing.photoUrl}" class="text-muted small">Aucune</span>
                     </td>
                     <td th:text="${listing.title}">Titre</td>
