@@ -4,6 +4,7 @@ import com.tortiki.frontend.client.AuthApiClient;
 import com.tortiki.frontend.dto.user.LoginRequest;
 import com.tortiki.frontend.dto.user.UserResponse;
 import feign.FeignException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -30,8 +31,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * sur les comptes réside dans {@code tortiki-api}. Ce provider :</p>
  * <ol>
  *   <li>Transmet email/mot de passe à {@code AuthApiClient.login}.</li>
- *   <li>Récupère le cookie {@code Set-Cookie} (JSESSIONID de l'API) dans
- *       la réponse HTTP.</li>
+ *   <li>Extrait strictement la paire {@code JSESSIONID=valeur} du
+ *       {@code Set-Cookie} de la réponse — sans les attributs
+ *       {@code Path}, {@code HttpOnly} ou {@code SameSite}.</li>
  *   <li>Stocke ce cookie dans la session HTTP du frontend, pour que
  *       {@code FeignConfig} le réinjecte lors des appels Feign suivants.</li>
  *   <li>Construit une {@code Authentication} Spring Security avec les rôles
@@ -56,6 +58,11 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
    * Préfixe standard Spring Security pour les autorités de rôle.
    */
   private static final String ROLE_PREFIX = "ROLE_";
+
+  /**
+   * Nom du cookie de session porté par {@code tortiki-api}.
+   */
+  private static final String JSESSIONID_PREFIX = "JSESSIONID=";
 
   /**
    * Client Feign vers les endpoints d'authentification de l'API.
@@ -155,19 +162,21 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
    *
    * <p>Seule la paire {@code nom=valeur} est conservée : les attributs
    * {@code Path}, {@code HttpOnly} et {@code SameSite} du {@code Set-Cookie}
-   * ne sont pas valides dans un en-tête {@code Cookie} de requête sortante.</p>
+   * ne sont pas valides dans un en-tête {@code Cookie} de requête sortante,
+   * et un serveur conforme RFC 6265 ne renvoie qu'un seul {@code Set-Cookie}
+   * par nom de cookie.</p>
    *
    * @param headers en-têtes de la réponse HTTP de l'API
    */
   private void storeApiSessionCookie(final HttpHeaders headers) {
-    final List<String> setCookieHeaders = headers.get(HttpHeaders.SET_COOKIE);
+    List<String> setCookieHeaders = headers.get(HttpHeaders.SET_COOKIE);
     if (setCookieHeaders == null || setCookieHeaders.isEmpty()) {
       log.warn("Aucun cookie Set-Cookie reçu de l'API après connexion réussie.");
       return;
     }
 
-    final String sessionCookie = setCookieHeaders.stream()
-        .filter(header -> header.startsWith("JSESSIONID="))
+    String sessionCookie = setCookieHeaders.stream()
+        .filter(header -> header.startsWith(JSESSIONID_PREFIX))
         .findFirst()
         .map(header -> header.split(";", 2)[0])
         .orElse(null);
@@ -177,15 +186,15 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
       return;
     }
 
-    final ServletRequestAttributes attributes =
+    ServletRequestAttributes attributes =
         (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attributes == null) {
       log.error("Impossible de stocker le cookie API : aucun contexte de requête HTTP actif.");
       return;
     }
 
-    attributes.getRequest().getSession(true)
-        .setAttribute(SESSION_ATTR_API_COOKIE, sessionCookie);
+    HttpServletRequest request = attributes.getRequest();
+    request.getSession(true).setAttribute(SESSION_ATTR_API_COOKIE, sessionCookie);
     log.debug("Cookie de session API stocké dans la session frontend.");
   }
 
