@@ -19,8 +19,9 @@ import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
-import java.util.List;
+import jakarta.servlet.http.HttpSession;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,6 +100,19 @@ class ApiDelegatingAuthenticationProviderTest {
         request, null, null);
   }
 
+  /**
+   * Récupère le cookie de session API stocké en session HTTP, en garantissant
+   * la non-nullité de la session pour l'analyse statique (SonarLint/Checkstyle).
+   *
+   * @return valeur du cookie {@code JSESSIONID} stockée, ou {@code null} si absente
+   */
+  private String storedApiCookie() {
+    HttpSession session = mockRequest.getSession(false);
+    assertThat(session).isNotNull();
+    return (String) Objects.requireNonNull(session)
+        .getAttribute(ApiDelegatingAuthenticationProvider.SESSION_ATTR_API_COOKIE);
+  }
+
   @Test
   @Story("Connexion réussie")
   @Severity(SeverityLevel.CRITICAL)
@@ -119,10 +133,7 @@ class ApiDelegatingAuthenticationProviderTest {
     assertThat(result.getAuthorities())
         .extracting(GrantedAuthority::getAuthority)
         .containsExactly("ROLE_SELLER");
-    assertThat(mockRequest.getSession(false)).isNotNull();
-    assertThat(mockRequest.getSession(false)
-        .getAttribute(ApiDelegatingAuthenticationProvider.SESSION_ATTR_API_COOKIE))
-        .isEqualTo("JSESSIONID=A1B2C3D4E5");
+    assertThat(storedApiCookie()).isEqualTo("JSESSIONID=A1B2C3D4E5");
   }
 
   @Test
@@ -142,10 +153,9 @@ class ApiDelegatingAuthenticationProviderTest {
 
     provider.authenticate(loginToken());
 
-    String storedCookie = (String) mockRequest.getSession(false)
-        .getAttribute(ApiDelegatingAuthenticationProvider.SESSION_ATTR_API_COOKIE);
-    assertThat(storedCookie).isEqualTo("JSESSIONID=XYZ987");
-    assertThat(storedCookie).doesNotContain("Path", "HttpOnly", "SameSite", "Secure");
+    assertThat(storedApiCookie())
+        .isEqualTo("JSESSIONID=XYZ987")
+        .doesNotContain("Path", "HttpOnly", "SameSite", "Secure");
   }
 
   @Test
@@ -164,9 +174,7 @@ class ApiDelegatingAuthenticationProviderTest {
 
     provider.authenticate(loginToken());
 
-    String storedCookie = (String) mockRequest.getSession(false)
-        .getAttribute(ApiDelegatingAuthenticationProvider.SESSION_ATTR_API_COOKIE);
-    assertThat(storedCookie).isEqualTo("JSESSIONID=RIGHTONE");
+    assertThat(storedApiCookie()).isEqualTo("JSESSIONID=RIGHTONE");
   }
 
   @Test
@@ -214,8 +222,9 @@ class ApiDelegatingAuthenticationProviderTest {
   void authenticate_shouldThrowBadCredentialsOn401() {
     when(authApiClient.login(new LoginRequest(EMAIL, PASSWORD)))
         .thenThrow(unauthorizedException());
+    Authentication token = loginToken();
 
-    assertThatThrownBy(() -> provider.authenticate(loginToken()))
+    assertThatThrownBy(() -> provider.authenticate(token))
         .isInstanceOf(BadCredentialsException.class)
         .hasMessage("Email ou mot de passe incorrect.");
   }
@@ -229,9 +238,10 @@ class ApiDelegatingAuthenticationProviderTest {
   void authenticate_shouldThrowServiceExceptionOnServerError() {
     when(authApiClient.login(new LoginRequest(EMAIL, PASSWORD)))
         .thenThrow(serverErrorException());
+    Authentication token = loginToken();
 
-    assertThatThrownBy(() -> provider.authenticate(loginToken()))
-        .isInstanceOf(org.springframework.security.authentication.AuthenticationServiceException.class)
+    assertThatThrownBy(() -> provider.authenticate(token))
+        .isInstanceOf(AuthenticationServiceException.class)
         .hasMessage("Le service d'authentification est momentanément indisponible.");
   }
 
@@ -243,10 +253,11 @@ class ApiDelegatingAuthenticationProviderTest {
   @DisplayName("authenticate lève une exception si le corps de réponse est vide")
   void authenticate_shouldThrowWhenBodyIsNull() {
     ResponseEntity<UserResponse> response = new ResponseEntity<>(
-        (UserResponse) null, new HttpHeaders(), HttpStatus.OK);
+        null, new HttpHeaders(), HttpStatus.OK);
     when(authApiClient.login(new LoginRequest(EMAIL, PASSWORD))).thenReturn(response);
+    Authentication token = loginToken();
 
-    assertThatThrownBy(() -> provider.authenticate(loginToken()))
+    assertThatThrownBy(() -> provider.authenticate(token))
         .isInstanceOf(AuthenticationServiceException.class)
         .hasMessage("Réponse d'authentification vide.");
   }
@@ -262,8 +273,9 @@ class ApiDelegatingAuthenticationProviderTest {
     ResponseEntity<UserResponse> response = new ResponseEntity<>(
         userResponseWithRoles(Set.of()), new HttpHeaders(), HttpStatus.OK);
     when(authApiClient.login(new LoginRequest(EMAIL, PASSWORD))).thenReturn(response);
+    Authentication token = loginToken();
 
-    assertThatThrownBy(() -> provider.authenticate(loginToken()))
+    assertThatThrownBy(() -> provider.authenticate(token))
         .isInstanceOf(AuthenticationServiceException.class)
         .hasMessage("Réponse d'authentification sans rôle exploitable.");
   }
