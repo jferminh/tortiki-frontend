@@ -1,12 +1,15 @@
 package com.tortiki.frontend.exception;
 
+import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -31,6 +34,12 @@ public class GlobalExceptionHandler {
 
   /** Route de repli si aucun en-tête {@code Referer} n'est disponible. */
   private static final String ROUTE_DASHBOARD_FALLBACK = "/dashboard";
+
+  /** Chemin de la vue d'erreur 403, réutilisant les templates de l'Issue #55. */
+  private static final String VIEW_ERROR_403 = "error/403";
+
+  /** Chemin de la vue d'erreur 404, réutilisant les templates de l'Issue #55. */
+  private static final String VIEW_ERROR_404 = "error/404";
 
   /**
    * Intercepte le dépassement de taille de fichier ou de requête multipart.
@@ -90,6 +99,64 @@ public class GlobalExceptionHandler {
     redirectAttributes.addFlashAttribute(FLASH_ATTR_ERROR,
         "Votre session a expiré. Merci de vous reconnecter et réessayer.");
     return REDIRECT_PREFIX + ROUTE_LOGIN;
+  }
+
+  /**
+   * Intercepte un échec d'authentification distant (401) renvoyé par tortiki-api.
+   *
+   * <p>Se produit typiquement quand la session frontend est encore active,
+   * mais que le jeton de session côté API a expiré ou est invalide.</p>
+   *
+   * @param ex      l'exception Feign 401 levée par l'appel distant
+   * @param request la requête HTTP en cours
+   * @return redirection vers la page de connexion avec message flash
+   */
+  @ExceptionHandler(FeignException.Unauthorized.class)
+  public String handleFeignUnauthorized(final FeignException.Unauthorized ex,
+                                        final HttpServletRequest request) {
+    log.warn("Appel API non authentifié sur {} : {}", request.getRequestURI(), ex.getMessage());
+    return REDIRECT_PREFIX + ROUTE_LOGIN;
+  }
+
+  /**
+   * Intercepte un refus d'accès distant (403) renvoyé par tortiki-api.
+   *
+   * <p>Se produit quand un utilisateur authentifié tente d'accéder à une
+   * ressource réservée à un autre rôle (ex. ROLE_SELLER sur une route
+   * réservée à ROLE_ADMIN, malgré la garde côté frontend).</p>
+   *
+   * @param ex      l'exception Feign 403 levée par l'appel distant
+   * @param request la requête HTTP en cours
+   * @return vue d'erreur 403 avec le code HTTP correspondant
+   */
+  @ExceptionHandler(FeignException.Forbidden.class)
+  public ModelAndView handleFeignForbidden(final FeignException.Forbidden ex,
+                                           final HttpServletRequest request) {
+    log.warn("Accès distant refusé sur {} : {}", request.getRequestURI(), ex.getMessage());
+    final ModelAndView modelAndView = new ModelAndView(VIEW_ERROR_403);
+    modelAndView.setStatus(HttpStatus.FORBIDDEN);
+    return modelAndView;
+  }
+
+  /**
+   * Intercepte une ressource distante introuvable (404) renvoyée par tortiki-api.
+   *
+   * <p>Se produit quand une annonce, un type de cuisine ou une demande de
+   * contact référencée par le frontend a été supprimée ou n'existe pas
+   * côté base de données.</p>
+   *
+   * @param ex      l'exception Feign 404 levée par l'appel distant
+   * @param request la requête HTTP en cours
+   * @return vue d'erreur 404 avec le code HTTP correspondant
+   */
+  @ExceptionHandler(FeignException.NotFound.class)
+  public ModelAndView handleFeignNotFound(final FeignException.NotFound ex,
+                                          final HttpServletRequest request) {
+    log.warn("Ressource distante introuvable sur {} : {}",
+        request.getRequestURI(), ex.getMessage());
+    final ModelAndView modelAndView = new ModelAndView(VIEW_ERROR_404);
+    modelAndView.setStatus(HttpStatus.NOT_FOUND);
+    return modelAndView;
   }
 
   /**
