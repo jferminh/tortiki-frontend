@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="fr">
 <head>
     <title>Tortiki — Accueil</title>
-    <th:block th:replace="~{fragments/layout :: head('Accueil')}"></th:block>
+    <th:block th:replace="~{fragments/layout :: head(title='Accueil')}"></th:block>
 </head>
 <body class="bg-light">
 
@@ -18,9 +18,12 @@
             Commandez directement auprès de cuisiniers passionnés
             et récupérez votre repas en Click &amp; Collect.
         </p>
-        <form th:action="@{/search}" method="get" class="row g-2 justify-content-center">
+        <form th:action="@{/search}" method="get" role="search"
+              class="row g-2 justify-content-center">
             <div class="col-12 col-md-5">
+                <label for="city" class="visually-hidden">Ville de recherche</label>
                 <input type="text"
+                       id="city"
                        name="city"
                        class="form-control form-control-lg"
                        placeholder="Votre ville (ex : Lyon, Marseille…)"
@@ -42,7 +45,7 @@
         <div class="row g-4 text-center">
             <div class="col-md-4">
                 <div class="bg-white rounded-3 shadow-sm p-4 h-100">
-                    <div class="fs-1 mb-3">🔍</div>
+                    <div class="fs-1 mb-3" aria-hidden="true">🔍</div>
                     <h3 class="h5 fw-semibold">1. Cherchez</h3>
                     <p class="text-muted small mb-0">
                         Entrez votre ville et trouvez des cuisiniers
@@ -52,7 +55,7 @@
             </div>
             <div class="col-md-4">
                 <div class="bg-white rounded-3 shadow-sm p-4 h-100">
-                    <div class="fs-1 mb-3">📩</div>
+                    <div class="fs-1 mb-3" aria-hidden="true">📩</div>
                     <h3 class="h5 fw-semibold">2. Contactez</h3>
                     <p class="text-muted small mb-0">
                         Envoyez une demande au cuisinier
@@ -62,7 +65,7 @@
             </div>
             <div class="col-md-4">
                 <div class="bg-white rounded-3 shadow-sm p-4 h-100">
-                    <div class="fs-1 mb-3">🥘</div>
+                    <div class="fs-1 mb-3" aria-hidden="true">🥘</div>
                     <h3 class="h5 fw-semibold">3. Récupérez</h3>
                     <p class="text-muted small mb-0">
                         Venez chercher votre repas à l'adresse
@@ -85,7 +88,8 @@
                    class="d-block text-center text-decoration-none p-3
                   bg-light rounded-3 border cuisine-card">
                     <div class="fw-semibold text-dark small"
-                         th:text="${cuisine.name}">Cuisine</div>
+                         th:text="${cuisine.name}">Cuisine
+                    </div>
                 </a>
             </div>
             <div class="col-12 text-center text-muted py-4"
