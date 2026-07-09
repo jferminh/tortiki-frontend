@@ -15,7 +15,7 @@ import java.util.Set;
  * @param lastName  nom de famille de l'utilisateur
  * @param roles    ensemble des rôles attribués
  */
-public record AuthResponse(
+public record UserResponse(
     Long id,
     String email,
     String firstName,

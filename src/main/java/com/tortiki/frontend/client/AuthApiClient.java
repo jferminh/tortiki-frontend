@@ -1,41 +1,44 @@
 package com.tortiki.frontend.client;
 
-import com.tortiki.frontend.dto.user.AuthResponse;
 import com.tortiki.frontend.dto.user.LoginRequest;
 import com.tortiki.frontend.dto.user.RegisterRequest;
+import com.tortiki.frontend.dto.user.UserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 /**
- * Client Feign pour les opérations d'authentification de l'API Tortiki.
+ * Client Feign pour les opérations d'authentification auprès de {@code tortiki-api}.
  *
- * <p>Le login est désormais délégué explicitement à l'API via
- * {@link #login(LoginRequest)} — {@code ApiDelegatingAuthenticationProvider}
- * consomme cette méthode pour vérifier les identifiants et récupérer
- * le cookie de session {@code JSESSIONID} de l'API.</p>
+ * <p>{@code UserResponse} sert de contrat unique pour {@code login} et {@code register} :
+ * les deux endpoints renvoient désormais la même représentation de l'utilisateur
+ * (identité + rôles), ce qui élimine la duplication qu'aurait entraînée un
+ * {@code AuthResponse} distinct — principe DRY.</p>
+ *
+ * <p>{@code ResponseEntity} est utilisé plutôt qu'un type de retour brut pour
+ * {@code login}, car {@code ApiDelegatingAuthenticationProvider} a besoin d'accéder
+ * à l'en-tête {@code Set-Cookie} de la réponse afin de relier la session frontend
+ * à la session API (voir Issue 58).</p>
  */
 @FeignClient(name = "auth-api", url = "${tortiki.api.url}")
 public interface AuthApiClient {
 
   /**
-   * Crée un nouveau compte utilisateur.
+   * Authentifie un utilisateur auprès de l'API.
    *
-   * @param request données d'inscription
-   * @return réponse d'authentification (id, email, rôle)
-   */
-  @PostMapping("/api/v1/auth/register")
-  AuthResponse register(@RequestBody RegisterRequest request);
-
-  /**
-   * Authentifie un utilisateur auprès de l'API et retourne
-   * la réponse complète (headers inclus) pour récupérer le cookie
-   * {@code Set-Cookie} contenant le JSESSIONID de l'API.
-   *
-   * @param request identifiants de connexion
-   * @return réponse HTTP complète avec headers et corps {@code AuthResponse}
+   * @param request identifiants de connexion (email, mot de passe)
+   * @return réponse HTTP complète, incluant le cookie de session et le profil utilisateur
    */
   @PostMapping("/api/v1/auth/login")
-  ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request);
+  ResponseEntity<UserResponse> login(@RequestBody LoginRequest request);
+
+  /**
+   * Inscrit un nouvel utilisateur auprès de l'API.
+   *
+   * @param request données d'inscription (email, mot de passe, nom, rôle)
+   * @return profil de l'utilisateur nouvellement créé
+   */
+  @PostMapping("/api/v1/auth/register")
+  UserResponse register(@RequestBody RegisterRequest request);
 }

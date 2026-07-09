@@ -1,8 +1,8 @@
 package com.tortiki.frontend.config.security;
 
 import com.tortiki.frontend.client.AuthApiClient;
-import com.tortiki.frontend.dto.user.AuthResponse;
 import com.tortiki.frontend.dto.user.LoginRequest;
+import com.tortiki.frontend.dto.user.UserResponse;
 import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collection;
@@ -31,8 +31,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * sur les comptes réside dans {@code tortiki-api}. Ce provider :</p>
  * <ol>
  *   <li>Transmet email/mot de passe à {@code AuthApiClient.login}.</li>
- *   <li>Récupère le cookie {@code Set-Cookie} (JSESSIONID de l'API) dans
- *       la réponse HTTP.</li>
+ *   <li>Extrait strictement la paire {@code JSESSIONID=valeur} du
+ *       {@code Set-Cookie} de la réponse — sans les attributs
+ *       {@code Path}, {@code HttpOnly} ou {@code SameSite}.</li>
  *   <li>Stocke ce cookie dans la session HTTP du frontend, pour que
  *       {@code FeignConfig} le réinjecte lors des appels Feign suivants.</li>
  *   <li>Construit une {@code Authentication} Spring Security avec les rôles
@@ -59,6 +60,11 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
   private static final String ROLE_PREFIX = "ROLE_";
 
   /**
+   * Nom du cookie de session porté par {@code tortiki-api}.
+   */
+  private static final String JSESSIONID_PREFIX = "JSESSIONID=";
+
+  /**
    * Client Feign vers les endpoints d'authentification de l'API.
    */
   private final AuthApiClient authApiClient;
@@ -78,7 +84,7 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
     String email = authentication.getName();
     String password = authentication.getCredentials().toString();
 
-    ResponseEntity<AuthResponse> response;
+    ResponseEntity<UserResponse> response;
     try {
       response = authApiClient.login(new LoginRequest(email, password));
     } catch (FeignException.Unauthorized unauthorizedException) {
@@ -93,7 +99,7 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
 
     storeApiSessionCookie(response.getHeaders());
 
-    AuthResponse body = response.getBody();
+    UserResponse body = response.getBody();
     if (body == null) {
       throw new AuthenticationServiceException("Réponse d'authentification vide.");
     }
@@ -151,25 +157,44 @@ public class ApiDelegatingAuthenticationProvider implements AuthenticationProvid
   }
 
   /**
-   * Extrait le cookie {@code Set-Cookie} de la réponse API et le stocke
+   * Extrait le cookie {@code JSESSIONID} de la réponse API et le stocke
    * dans la session HTTP courante du frontend.
+   *
+   * <p>Seule la paire {@code nom=valeur} est conservée : les attributs
+   * {@code Path}, {@code HttpOnly} et {@code SameSite} du {@code Set-Cookie}
+   * ne sont pas valides dans un en-tête {@code Cookie} de requête sortante,
+   * et un serveur conforme RFC 6265 ne renvoie qu'un seul {@code Set-Cookie}
+   * par nom de cookie.</p>
    *
    * @param headers en-têtes de la réponse HTTP de l'API
    */
   private void storeApiSessionCookie(final HttpHeaders headers) {
-    String setCookie = headers.getFirst(HttpHeaders.SET_COOKIE);
-    if (setCookie == null) {
+    List<String> setCookieHeaders = headers.get(HttpHeaders.SET_COOKIE);
+    if (setCookieHeaders == null || setCookieHeaders.isEmpty()) {
       log.warn("Aucun cookie Set-Cookie reçu de l'API après connexion réussie.");
       return;
     }
+
+    String sessionCookie = setCookieHeaders.stream()
+        .filter(header -> header.startsWith(JSESSIONID_PREFIX))
+        .findFirst()
+        .map(header -> header.split(";", 2)[0])
+        .orElse(null);
+
+    if (sessionCookie == null) {
+      log.warn("Aucun JSESSIONID trouvé parmi les cookies renvoyés par l'API.");
+      return;
+    }
+
     ServletRequestAttributes attributes =
         (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attributes == null) {
       log.error("Impossible de stocker le cookie API : aucun contexte de requête HTTP actif.");
       return;
     }
+
     HttpServletRequest request = attributes.getRequest();
-    request.getSession(true).setAttribute(SESSION_ATTR_API_COOKIE, setCookie);
+    request.getSession(true).setAttribute(SESSION_ATTR_API_COOKIE, sessionCookie);
     log.debug("Cookie de session API stocké dans la session frontend.");
   }
 
