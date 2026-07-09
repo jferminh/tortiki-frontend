@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 /**
@@ -165,9 +164,11 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
 
-        // CSRF activé — formulaires Thymeleaf (th:action génère le token)
+        // CSRF activé — formulaires Thymeleaf (th:action génère et injecte le token)
+        // Stockage en session HTTP (comportement par défaut Spring Security), jamais
+        // exposé au navigateur via un cookie lisible en JavaScript : Tortiki est une
+        // application SSR pure, aucun appel AJAX ne nécessite d'y accéder côté client.
         .csrf(csrf -> csrf
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
         )
 
