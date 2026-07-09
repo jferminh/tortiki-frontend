@@ -1,7 +1,7 @@
 package com.tortiki.frontend.client;
 
 import com.tortiki.frontend.dto.user.UpdateUserProfileRequest;
-import com.tortiki.frontend.dto.user.UserProfileResponse;
+import com.tortiki.frontend.dto.user.UserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,7 +25,7 @@ public interface UserApiClient {
    * @return détail du profil (identité, rôles)
    */
   @GetMapping("/api/v1/users/me")
-  UserProfileResponse getMyProfile();
+  UserResponse getMyProfile();
 
   /**
    * Met à jour le profil de l'utilisateur actuellement connecté.
@@ -34,5 +34,5 @@ public interface UserApiClient {
    * @return profil mis à jour
    */
   @PutMapping("/api/v1/users/me")
-  UserProfileResponse updateMyProfile(@RequestBody UpdateUserProfileRequest request);
+  UserResponse updateMyProfile(@RequestBody UpdateUserProfileRequest request);
 }
