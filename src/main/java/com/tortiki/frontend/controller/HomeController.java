@@ -12,13 +12,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 /**
  * Contrôleur de la page d'accueil Tortiki.
  *
- * <p>Charge les types de cuisine actifs depuis l'API
- * pour alimenter la section de navigation par cuisine.</p>
+ * <p>Charge les types de cuisine actifs depuis l'API pour alimenter
+ * la section de navigation par cuisine. Réutilise {@link SearchApiClient},
+ * déjà exploité par la recherche et le panel d'administration.</p>
  */
 @Slf4j
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
+
+  private static final String VIEW_HOME = "home";
+  private static final String ATTR_CUISINE_TYPES = "cuisineTypes";
 
   /** Client Feign pour les endpoints de recherche et de référentiel. */
   private final SearchApiClient searchApiClient;
@@ -32,8 +36,8 @@ public class HomeController {
   @GetMapping("/")
   public String home(final Model model) {
     log.debug("Chargement de la page d'accueil");
-    List<CuisineTypeResponse> cuisineTypes = searchApiClient.getCuisineTypes();
-    model.addAttribute("cuisineTypes", cuisineTypes);
-    return "home";
+    final List<CuisineTypeResponse> cuisineTypes = searchApiClient.getCuisineTypes();
+    model.addAttribute(ATTR_CUISINE_TYPES, cuisineTypes);
+    return VIEW_HOME;
   }
 }
