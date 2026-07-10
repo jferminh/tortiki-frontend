@@ -176,7 +176,7 @@ public class SecurityConfig {
         .formLogin(form -> form
             .loginPage(ROUTE_LOGIN)
             .loginProcessingUrl(ROUTE_LOGIN)
-            .defaultSuccessUrl(ROUTE_HOME, true)
+            .successHandler(new RoleBasedAuthenticationSuccessHandler())
             .failureHandler(authenticationFailureHandler())
             .permitAll()
         )
