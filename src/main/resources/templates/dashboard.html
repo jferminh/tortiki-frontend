@@ -4,10 +4,10 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title th:text="'Tableau de bord — Tortiki'">Tableau de bord — Tortiki</title>
-    <th:block th:replace="~{layout :: head('Tableau de bord')}"></th:block>
+    <th:block th:replace="~{fragments/layout :: head('Tableau de bord')}"></th:block>
 </head>
 <body>
-<nav th:replace="~{layout :: navbar}"></nav>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
 
 <main class="container py-5">
 

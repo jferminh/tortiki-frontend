@@ -4,10 +4,10 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title th:text="'Fiche plat — Tortiki'">Fiche plat — Tortiki</title>
-    <th:block th:replace="~{layout :: head('Fiche plat')}"></th:block>
+    <th:block th:replace="~{fragments/layout :: head('Fiche plat')}"></th:block>
 </head>
 <body>
-<nav th:replace="~{layout :: navbar}"></nav>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
 
 <main class="container py-5">
 
@@ -122,6 +122,6 @@
 
 </main>
 
-<footer th:replace="~{layout :: footer}"></footer>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>
