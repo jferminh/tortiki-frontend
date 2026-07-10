@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Fiche plat')}"></head>
+<body>
+<nav th:replace="~{layout :: navbar}"></nav>
+
+<main class="container py-5">
+
+    <div class="row g-4">
+
+        <!-- Photo de l'annonce -->
+        <div class="col-12 col-md-5">
+            <img th:if="${listing.photoUrl != null}"
+                 th:src="${listing.photoUrl}"
+                 class="img-fluid rounded shadow-sm w-100"
+                 style="object-fit: cover; max-height: 360px;"
+                 alt="Photo du plat"/>
+            <div th:unless="${listing.photoUrl != null}"
+                 class="bg-light rounded d-flex align-items-center justify-content-center"
+                 style="height: 280px;">
+                <span class="text-muted small">Aucune photo disponible</span>
+            </div>
+        </div>
+
+        <!-- Informations principales -->
+        <div class="col-12 col-md-7">
+            <h1 class="h3 fw-bold" th:text="${listing.title}">Titre du plat</h1>
+
+            <p class="text-success fs-4 fw-bold mb-2"
+               th:text="${listing.price} + ' €'">0,00 €</p>
+
+            <p class="text-muted mb-3">
+                <span th:text="${listing.portionsAvailable}">0</span> portion(s) disponible(s)
+                — Retrait à
+                <span th:text="${listing.city}">Ville</span>
+            </p>
+
+            <p class="mb-4" th:text="${listing.description}">Description du plat.</p>
+
+            <!-- Allergènes -->
+            <div class="mb-4" th:if="${!listing.allergenIds.isEmpty()}">
+                <h2 class="h6 fw-semibold mb-2">Allergènes présents</h2>
+                <span class="badge bg-warning text-dark me-1"
+                      th:each="allergenId : ${listing.allergenIds}"
+                      th:text="'Allergène #' + ${allergenId}">Allergène</span>
+            </div>
+            <p class="text-muted small mb-4" th:if="${listing.allergenIds.isEmpty()}">
+                Aucun allergène signalé par le vendeur.
+            </p>
+
+            <!-- Formulaire de contact -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 fw-bold mb-3">Exprimer mon intérêt</h2>
+
+                    <div sec:authorize="isAnonymous()" class="small text-muted">
+                        <a th:href="@{/login}" class="link-success fw-semibold">Connectez-vous</a>
+                        pour contacter le vendeur et réserver ce plat.
+                    </div>
+
+                    <form sec:authorize="isAuthenticated()"
+                          th:action="@{/contact-requests}"
+                          th:object="${contactRequest}"
+                          method="post">
+                        <input type="hidden" th:field="*{listingId}"/>
+
+                        <div class="mb-3">
+                            <label for="portions" class="form-label small">Nombre de portions</label>
+                            <input type="number" id="portions" th:field="*{portions}"
+                                   class="form-control" min="1" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="message" class="form-label small">Message au vendeur</label>
+                            <textarea id="message" th:field="*{message}"
+                                      class="form-control" rows="3"
+                                      placeholder="Précisez l'heure de retrait souhaitée, une allergie, etc."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            Envoyer ma demande
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section avis -->
+    <section class="mt-5">
+        <h2 class="h5 fw-bold mb-3">Avis des clients</h2>
+
+        <div th:if="${reviews.isEmpty()}" class="text-muted small">
+            Aucun avis pour le moment. Soyez le premier à donner votre avis après votre commande !
+        </div>
+
+        <div th:unless="${reviews.isEmpty()}" class="row g-3">
+            <div class="col-12 col-md-6" th:each="review : ${reviews}">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-semibold" th:text="${review.reviewerFirstName}">Prénom</span>
+                            <span class="text-warning" aria-label="Note sur 5">
+                                <span th:each="i : ${#numbers.sequence(1, review.rating)}">★</span>
+                                <span th:each="i : ${#numbers.sequence(review.rating + 1, 5)}"
+                                      class="text-muted">★</span>
+                            </span>
+                        </div>
+                        <p class="small text-muted mb-0" th:text="${review.comment}">Commentaire</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+</body>
+</html>
