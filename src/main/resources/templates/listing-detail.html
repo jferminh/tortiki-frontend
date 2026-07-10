@@ -2,7 +2,10 @@
 <html lang="fr"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout :: head('Fiche plat')}"></head>
+<head>
+    <title th:text="'Fiche plat — Tortiki'">Fiche plat — Tortiki</title>
+    <th:block th:replace="~{layout :: head('Fiche plat')}"></th:block>
+</head>
 <body>
 <nav th:replace="~{layout :: navbar}"></nav>
 
@@ -16,7 +19,7 @@
                  th:src="${listing.photoUrl}"
                  class="img-fluid rounded shadow-sm w-100"
                  style="object-fit: cover; max-height: 360px;"
-                 alt="Photo du plat"/>
+                 th:alt="${listing.title}"/>
             <div th:unless="${listing.photoUrl != null}"
                  class="bg-light rounded d-flex align-items-center justify-content-center"
                  style="height: 280px;">
@@ -32,9 +35,11 @@
                th:text="${listing.price} + ' €'">0,00 €</p>
 
             <p class="text-muted mb-3">
-                <span th:text="${listing.portionsAvailable}">0</span> portion(s) disponible(s)
+                <span th:text="${listing.portions}">0</span> portion(s) disponible(s)
                 — Retrait à
-                <span th:text="${listing.city}">Ville</span>
+                <span th:text="${listing.pickupAddress}">Adresse de retrait</span>
+                le
+                <span th:text="${#temporals.format(listing.pickupDatetime, 'dd/MM/yyyy à HH:mm')}">Date</span>
             </p>
 
             <p class="mb-4" th:text="${listing.description}">Description du plat.</p>
