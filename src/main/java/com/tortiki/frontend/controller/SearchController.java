@@ -25,6 +25,9 @@ public class SearchController {
   /** Nombre de résultats par page par défaut. */
   private static final int DEFAULT_PAGE_SIZE = 12;
 
+  /** Nom de l'attribut du modèle listant les types de cuisine. */
+  private static final String ATTR_CUISINE_TYPES = "cuisineTypes";
+
   /** Client Feign pour les endpoints de recherche. */
   private final SearchApiClient searchApiClient;
 
@@ -36,7 +39,7 @@ public class SearchController {
    */
   @GetMapping("/search")
   public String searchForm(final Model model) {
-    model.addAttribute("cuisineTypes", searchApiClient.getCuisineTypes());
+    model.addAttribute(ATTR_CUISINE_TYPES, searchApiClient.getCuisineTypes());
     return "search";
   }
 
@@ -53,8 +56,8 @@ public class SearchController {
       @ModelAttribute final SearchCriteria criteria,
       final Model model) {
     log.debug("Recherche avec critères : {}", criteria);
-    int size = criteria.size() > 0 ? criteria.size() : DEFAULT_PAGE_SIZE;
-    List<ListingCardResponse> results = searchApiClient.search(
+    final int size = criteria.size() > 0 ? criteria.size() : DEFAULT_PAGE_SIZE;
+    final List<ListingCardResponse> results = searchApiClient.search(
         criteria.query(),
         criteria.city(),
         criteria.postalCode(),
@@ -64,7 +67,7 @@ public class SearchController {
     );
     model.addAttribute("results", results);
     model.addAttribute("criteria", criteria);
-    model.addAttribute("cuisineTypes", searchApiClient.getCuisineTypes());
+    model.addAttribute(ATTR_CUISINE_TYPES, searchApiClient.getCuisineTypes());
     return "search-results";
   }
 }
