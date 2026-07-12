@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.tortiki.frontend.client.SearchApiClient;
+import com.tortiki.frontend.config.SecurityConfig;
+import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
 import com.tortiki.frontend.dto.listing.CuisineTypeResponse;
 import feign.FeignException;
 import feign.Request;
@@ -23,6 +25,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,8 +41,16 @@ import java.util.List;
  * routage, le modèle Thymeleaf et la dégradation gracieuse en cas de
  * panne distante sont vérifiés, jamais l'appel HTTP réel vers
  * {@code tortiki-api}.</p>
+ *
+ * <p>{@code SecurityConfig} est explicitement importé plutôt que
+ * désactivé ({@code addFilters = false}), afin de vérifier réellement
+ * que la route {@code /} est déclarée {@code permitAll()} — un test de
+ * confiance sur le comportement de sécurité, pas seulement sur le
+ * contrôleur isolé. {@code ApiDelegatingAuthenticationProvider} est
+ * simulé car il n'est jamais sollicité par un accès anonyme.</p>
  */
 @WebMvcTest(HomeController.class)
+@Import(SecurityConfig.class)
 @ActiveProfiles("test")
 @Epic("Tortiki Frontend")
 @Feature("Page d'accueil")
@@ -52,6 +63,9 @@ class HomeControllerTest {
 
   @MockitoBean
   private SearchApiClient searchApiClient;
+
+  @MockitoBean
+  private ApiDelegatingAuthenticationProvider authenticationProvider;
 
   @Test
   @DisplayName("GET / retourne 200 et affiche les types de cuisine disponibles")
@@ -99,11 +113,11 @@ class HomeControllerTest {
   }
 
   @Test
-  @DisplayName("GET / est accessible sans authentification")
+  @DisplayName("GET / est accessible sans authentification (route permitAll)")
   @Story("Accès public")
   @Severity(SeverityLevel.CRITICAL)
-  @Description("La page d'accueil est publique : aucune redirection vers /login "
-      + "ne doit se produire pour un visiteur anonyme.")
+  @Description("Vérifie le comportement réel de SecurityConfig : la route / doit "
+      + "être déclarée permitAll, contrairement aux routes /dashboard et /admin.")
   void shouldAllowAnonymousAccessToHome() throws Exception {
     when(searchApiClient.getCuisineTypes()).thenReturn(List.of());
 
@@ -113,8 +127,8 @@ class HomeControllerTest {
   @Step("Préparer deux types de cuisine actifs")
   private List<CuisineTypeResponse> givenActiveCuisineTypes() {
     return List.of(
-        new CuisineTypeResponse(1L, "Ukrainienne"),
-        new CuisineTypeResponse(2L, "Française"));
+        new CuisineTypeResponse(1L, "Ukrainienne", "Cuisine traditionnelle d'Ukraine", true),
+        new CuisineTypeResponse(2L, "Française", "Cuisine traditionnelle française", true));
   }
 
   @Step("Simuler une panne 500 de tortiki-api")
