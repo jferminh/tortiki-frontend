@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @RequiredArgsConstructor
 public class SearchController {
 
+  /** Numéro de page par défaut si non précisé par le visiteur. */
+  private static final int DEFAULT_PAGE = 0;
+
   /** Nombre de résultats par page par défaut. */
   private static final int DEFAULT_PAGE_SIZE = 12;
 
@@ -47,6 +50,9 @@ public class SearchController {
    * Recherche des annonces selon les critères fournis et affiche
    * la grille de résultats.
    *
+   * <p>{@code page} et {@code size} appliquent des valeurs par défaut
+   * si le visiteur ne les a pas explicitement précisés dans l'URL.</p>
+   *
    * @param criteria critères de recherche liés depuis les paramètres de requête
    * @param model modèle Thymeleaf
    * @return nom de la vue {@code search-results}
@@ -56,13 +62,15 @@ public class SearchController {
       @ModelAttribute final SearchCriteria criteria,
       final Model model) {
     log.debug("Recherche avec critères : {}", criteria);
-    final int size = criteria.size() > 0 ? criteria.size() : DEFAULT_PAGE_SIZE;
+    final int page = criteria.page() != null ? criteria.page() : DEFAULT_PAGE;
+    final int size = criteria.size() != null && criteria.size() > 0
+        ? criteria.size() : DEFAULT_PAGE_SIZE;
     final List<ListingCardResponse> results = searchApiClient.search(
         criteria.query(),
         criteria.city(),
         criteria.postalCode(),
         criteria.cuisineTypeId(),
-        criteria.page(),
+        page,
         size
     );
     model.addAttribute("results", results);
