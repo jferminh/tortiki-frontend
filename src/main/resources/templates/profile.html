@@ -10,7 +10,7 @@
     <div class="container" style="max-width: 640px;">
         <h1 class="h4 fw-bold mb-4">Mon profil</h1>
 
-        <div th:if="${success} != null" class="alert alert-success small" th:text="${success}"></div>
+        <div th:if="${success != null}" class="alert alert-success small" th:text="${success}"></div>
 
         <div class="card shadow-sm border-0 p-4">
             <form th:action="@{/profile/update}" th:object="${updateUserProfileRequest}" method="post">
@@ -39,7 +39,12 @@
         <div class="card shadow-sm border-0 p-4 mt-4">
             <h2 class="h6 fw-semibold mb-3">Informations du compte</h2>
             <p class="small text-muted mb-1">Email : <span th:text="${profile.email}"></span></p>
-            <p class="small text-muted mb-0">Rôle : <span th:text="${profile.role}"></span></p>
+            <p class="small text-muted mb-0">
+                Rôle :
+                <span th:each="role, iterStat : ${profile.roles}">
+                    <span th:text="${role}"></span><span th:if="${!iterStat.last}">, </span>
+                </span>
+            </p>
         </div>
     </div>
 </section>
