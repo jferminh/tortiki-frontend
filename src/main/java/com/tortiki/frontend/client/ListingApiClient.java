@@ -49,15 +49,6 @@ public interface ListingApiClient {
   ListingDetailResponse findById(@PathVariable Long id);
 
   /**
-   * Récupère le détail d'une annonce par son identifiant.
-   *
-   * @param id identifiant de l'annonce
-   * @return détail complet de l'annonce
-   */
-  @GetMapping("/api/v1/listings/{id}")
-  ListingDetailResponse getById(@PathVariable Long id);
-
-  /**
    * Crée une nouvelle annonce.
    *
    * @param request données du formulaire
