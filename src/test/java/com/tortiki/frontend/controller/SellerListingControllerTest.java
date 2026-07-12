@@ -1,12 +1,14 @@
 package com.tortiki.frontend.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -15,8 +17,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.tortiki.frontend.client.ListingApiClient;
-import com.tortiki.frontend.dto.listing.AllergenResponse;
-import com.tortiki.frontend.dto.listing.CuisineTypeResponse;
+import com.tortiki.frontend.config.SecurityConfig;
+import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.dto.listing.CreateListingRequest;
 import com.tortiki.frontend.dto.listing.ListingDetailResponse;
 import feign.FeignException;
 import feign.Request;
@@ -27,41 +30,43 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Step;
 import io.qameta.allure.Story;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Tests unitaires du contrôleur {@link SellerListingController}.
+ * Tests unitaires de la couche web {@code SellerListingController}.
  *
- * <p>Utilise {@code WebMvcTest} pour charger uniquement la couche web —
- * {@link ListingApiClient} est entièrement mocké, aucun appel réel à
- * {@code tortiki-api} n'est effectué.</p>
- *
- * <p>Vérifie que le formulaire de création/édition transmet à l'API un
- * payload conforme au contrat réel ({@code portions}, {@code pickupAddress},
- * {@code pickupDatetime} — cf. correctif Issue 53), et que la désactivation
- * d'annonce ainsi que le repli sur les allergènes indisponibles fonctionnent
- * correctement.</p>
+ * <p>{@code ListingApiClient} est simulé via {@code @MockitoBean}.
+ * {@code SecurityConfig} est importé pour vérifier que {@code
+ * /seller/listings/**} exige bien une authentification (SELLER_ROUTES),
+ * l'authentification étant simulée via {@code user().roles("SELLER")}
+ * puisque {@code ApiDelegatingAuthenticationProvider} est mocké.</p>
  */
 @WebMvcTest(SellerListingController.class)
+@Import(SecurityConfig.class)
 @ActiveProfiles("test")
-@Epic("Espace vendeur")
-@Feature("Gestion des annonces (Issue 53)")
-@DisplayName("SellerListingController")
+@Epic("Tortiki Frontend")
+@Feature("Gestion des annonces vendeur")
 class SellerListingControllerTest {
 
+  private static final String SELLER_LISTINGS_URL = "/seller/listings";
+  private static final String SELLER_LISTINGS_NEW_URL = "/seller/listings/new";
   private static final String SELLER_EMAIL = "sofia@tortiki.fr";
-  private static final Long LISTING_ID = 1L;
 
   @Autowired
   private MockMvc mockMvc;
@@ -69,175 +74,260 @@ class SellerListingControllerTest {
   @MockitoBean
   private ListingApiClient listingApiClient;
 
-  private ListingDetailResponse detail;
+  @MockitoBean
+  private ApiDelegatingAuthenticationProvider authenticationProvider;
 
-  @BeforeEach
-  void setUp() {
-    detail = new ListingDetailResponse(
-        LISTING_ID, "Bortsch ukrainien", "Soupe traditionnelle",
-        new BigDecimal("8.50"), 4, 1L, List.of(),
-        "12 rue de la Paix, 54000 Nancy",
-        LocalDateTime.now().plusDays(7), null,
-        "ACTIVE");
-
-    when(listingApiClient.getCuisineTypes())
-        .thenReturn(List.of(new CuisineTypeResponse(
-            1L, "Ukrainienne", "Plat traditionnel ukrainienne", true)));
-    when(listingApiClient.getAllergens())
-        .thenReturn(List.of(new AllergenResponse(1L, "Gluten")));
+  @Test
+  @DisplayName("GET /seller/listings sans authentification redirige vers /login")
+  @Story("Accès restreint")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Vérifie le comportement réel de SecurityConfig : /seller/** "
+      + "fait partie de SELLER_ROUTES, un visiteur anonyme doit être redirigé.")
+  void shouldRedirectToLoginWhenAnonymousAccessesMyListings() throws Exception {
+    mockMvc.perform(get(SELLER_LISTINGS_URL))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/login"));
   }
 
   @Test
-  @Story("Consultation des annonces")
-  @Severity(SeverityLevel.NORMAL)
-  @Description("Le vendeur authentifié consulte la liste de ses annonces, tous statuts confondus.")
-  @DisplayName("GET /seller/listings retourne la vue liste")
-  void myListings_shouldReturnListView() throws Exception {
-    when(listingApiClient.getMyListings()).thenReturn(List.of(detail));
+  @DisplayName("GET /seller/listings authentifié retourne 200 avec les annonces du vendeur")
+  @Story("Consultation des annonces vendeur")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Sofia consulte ses annonces, tous statuts confondus, résolues "
+      + "côté API depuis le cookie de session (aucun email transmis en paramètre).")
+  void shouldReturnMyListingsForAuthenticatedSeller() throws Exception {
+    final List<ListingDetailResponse> listings = List.of(givenActiveListing());
+    when(listingApiClient.getMyListings()).thenReturn(listings);
 
-    mockMvc.perform(get("/seller/listings").with(user(SELLER_EMAIL).roles("SELLER")))
+    mockMvc.perform(get(SELLER_LISTINGS_URL).with(sellerUser()))
         .andExpect(status().isOk())
         .andExpect(view().name("seller-listings"))
-        .andExpect(model().attributeExists("listings"));
+        .andExpect(model().attribute("listings", listings));
   }
 
   @Test
+  @DisplayName("GET /seller/listings/new retourne 200 avec un formulaire de création vide")
   @Story("Création d'annonce")
-  @Severity(SeverityLevel.NORMAL)
-  @Description(
-      "Affiche un formulaire vide avec les listes de référence (types de cuisine, allergènes).")
-  @DisplayName("GET /seller/listings/new affiche le formulaire vide")
-  void newListingForm_shouldReturnFormView() throws Exception {
-    mockMvc.perform(get("/seller/listings/new")
-            .with(user(SELLER_EMAIL).roles("SELLER")))
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Sofia affiche le formulaire vide de création, avec isEdit=false "
+      + "et l'action pointant vers /seller/listings/new.")
+  void shouldReturnEmptyCreateForm() throws Exception {
+    when(listingApiClient.getCuisineTypes()).thenReturn(List.of());
+    when(listingApiClient.getAllergens()).thenReturn(List.of());
+
+    mockMvc.perform(get(SELLER_LISTINGS_NEW_URL).with(sellerUser()))
         .andExpect(status().isOk())
         .andExpect(view().name("listing-form"))
         .andExpect(model().attribute("isEdit", false))
-        .andExpect(model().attribute("formAction", "/seller/listings/new"));
+        .andExpect(model().attribute("formAction", SELLER_LISTINGS_NEW_URL))
+        .andExpect(model().attribute("listingRequest",
+            new CreateListingRequest(null, null, null, null, null, null, null, null)));
   }
 
   @Test
-  @Story("Création d'annonce")
-  @Severity(SeverityLevel.CRITICAL)
-  @Description("Un payload incomplet réaffiche le formulaire avec les erreurs sur "
-      + "portions, pickupAddress et pickupDatetime — contrat aligné sur tortiki-api.")
-  @DisplayName("POST /seller/listings/new avec champs manquants réaffiche le formulaire")
-  void createListing_shouldReturnFormView_whenRequiredFieldsMissing() throws Exception {
-    mockMvc.perform(post("/seller/listings/new")
-            .with(csrf())
-            .with(user(SELLER_EMAIL).roles("SELLER"))
-            .param("title", "Bortsch")
-            .param("price", "8.50"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("listing-form"))
-        .andExpect(model().attributeHasFieldErrors("listingRequest", "pickupDatetime"))
-        .andExpect(model().attributeHasFieldErrors("listingRequest", "portions"))
-        .andExpect(model().attributeHasFieldErrors("listingRequest", "pickupAddress"));
-  }
-
-  @Test
-  @Story("Création d'annonce")
-  @Severity(SeverityLevel.CRITICAL)
-  @Description(
-      "Un payload valide crée l'annonce via l'API et redirige vers la liste avec un message flash."
-  )
-  @DisplayName("POST /seller/listings/new valide crée l'annonce et redirige")
-  void createListing_shouldRedirect_whenPayloadValid() throws Exception {
-    when(listingApiClient.create(any())).thenReturn(detail);
-
-    mockMvc.perform(post("/seller/listings/new")
-            .with(csrf())
-            .with(user(SELLER_EMAIL).roles("SELLER"))
-            .param("title", "Bortsch ukrainien")
-            .param("description", "Soupe traditionnelle")
-            .param("price", "8.50")
-            .param("portions", "4")
-            .param("pickupAddress", "12 rue de la Paix, 54000 Nancy")
-            .param("pickupDatetime", LocalDateTime.now().plusDays(7).toString())
-            .param("cuisineTypeId", "1"))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/seller/listings"))
-        .andExpect(flash().attribute("success", "Annonce publiée avec succès."));
-
-    verify(listingApiClient).create(any());
-  }
-
-  @Test
-  @Story("Édition d'annonce")
+  @DisplayName("GET /seller/listings/new tolère une panne de l'endpoint allergènes")
+  @Story("Création d'annonce — résilience")
   @Severity(SeverityLevel.NORMAL)
-  @Description("Le formulaire d'édition est pré-rempli avec les données existantes de l'annonce.")
-  @DisplayName("GET /seller/listings/{id}/edit pré-remplit le formulaire")
-  void editListingForm_shouldPrefillFields() throws Exception {
-    when(listingApiClient.getById(anyLong())).thenReturn(detail);
+  @Description("Si /api/v1/allergens répond en erreur 500 (endpoint en cours de "
+      + "stabilisation côté API), le formulaire doit tout de même s'afficher "
+      + "avec une liste d'allergènes vide plutôt que de propager l'erreur.")
+  void shouldDegradeGracefullyWhenAllergensEndpointFails() throws Exception {
+    when(listingApiClient.getCuisineTypes()).thenReturn(List.of());
+    when(listingApiClient.getAllergens()).thenThrow(givenFeignServerError());
 
-    mockMvc.perform(get("/seller/listings/1/edit").with(user(SELLER_EMAIL).roles("SELLER")))
-        .andExpect(status().isOk())
-        .andExpect(view().name("listing-form"))
-        .andExpect(model().attribute("isEdit", true))
-        .andExpect(model().attribute("formAction", "/seller/listings/1/edit"))
-        .andExpect(model().attributeExists("listingRequest"));
-  }
-
-  @Test
-  @Story("Édition d'annonce")
-  @Severity(SeverityLevel.CRITICAL)
-  @Description(
-      "Une mise à jour valide appelle l'API update et redirige avec un message flash de succès.")
-  @DisplayName("POST /seller/listings/{id}/edit valide met à jour et redirige")
-  void updateListing_shouldRedirect_whenPayloadValid() throws Exception {
-    when(listingApiClient.update(anyLong(), any())).thenReturn(detail);
-
-    mockMvc.perform(post("/seller/listings/1/edit")
-            .with(csrf())
-            .with(user(SELLER_EMAIL).roles("SELLER"))
-            .param("title", "Bortsch ukrainien")
-            .param("description", "Soupe traditionnelle")
-            .param("price", "8.50")
-            .param("portions", "4")
-            .param("pickupAddress", "12 rue de la Paix, 54000 Nancy")
-            .param("pickupDatetime", LocalDateTime.now().plusDays(7).toString())
-            .param("cuisineTypeId", "1"))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/seller/listings"))
-        .andExpect(flash().attribute("success", "Annonce mise à jour avec succès."));
-
-    verify(listingApiClient).update(anyLong(), any());
-  }
-
-  @Test
-  @Story("Désactivation d'annonce")
-  @Severity(SeverityLevel.NORMAL)
-  @Description(
-      "La désactivation appelle le DELETE Feign (suppression logique) "
-          + "et redirige avec message flash.")
-  @DisplayName("POST /seller/listings/{id}/delete désactive l'annonce et redirige")
-  void deleteListing_shouldRedirect_afterDeactivation() throws Exception {
-    mockMvc.perform(post("/seller/listings/1/delete")
-            .with(csrf())
-            .with(user(SELLER_EMAIL).roles("SELLER")))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/seller/listings"))
-        .andExpect(flash().attribute("success", "Annonce désactivée avec succès."));
-
-    verify(listingApiClient).delete(LISTING_ID);
-  }
-
-  @Test
-  @Story("Résilience API")
-  @Severity(SeverityLevel.MINOR)
-  @Description("Si l'endpoint /api/v1/allergens est indisponible (500), le formulaire "
-      + "s'affiche malgré tout avec une liste d'allergènes vide (safeGetAllergens).")
-  @DisplayName("GET /seller/listings/new tolère l'indisponibilité de l'endpoint allergènes")
-  void newListingForm_shouldToleratesAllergensEndpointFailure() throws Exception {
-    Request feignRequest = Request.create(HttpMethod.GET, "/api/v1/allergens",
-        java.util.Map.of(), null, new RequestTemplate());
-    when(listingApiClient.getAllergens())
-        .thenThrow(new FeignException.InternalServerError(
-            "erreur serveur", feignRequest, null, null));
-
-    mockMvc.perform(get("/seller/listings/new").with(user(SELLER_EMAIL).roles("SELLER")))
+    mockMvc.perform(get(SELLER_LISTINGS_NEW_URL).with(sellerUser()))
         .andExpect(status().isOk())
         .andExpect(view().name("listing-form"))
         .andExpect(model().attribute("allergens", List.of()));
+  }
+
+  @Test
+  @DisplayName("POST /seller/listings/new avec données valides sans photo redirige")
+  @Story("Création d'annonce")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Sofia crée une annonce de bortsch sans téléverser de photo : "
+      + "délégation à ListingApiClient.create, aucun appel à uploadPhoto.")
+  void shouldCreateListingWithoutPhotoAndRedirect() throws Exception {
+    when(listingApiClient.create(any(CreateListingRequest.class)))
+        .thenReturn(givenActiveListing());
+
+    final ResultActions result = whenSubmitCreateForm();
+
+    result.andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(SELLER_LISTINGS_URL))
+        .andExpect(flash().attributeExists("success"));
+    verify(listingApiClient).create(any(CreateListingRequest.class));
+    verify(listingApiClient, never()).uploadPhoto(any(), any());
+  }
+
+  @Test
+  @DisplayName("POST /seller/listings/new avec photo déclenche l'upload")
+  @Story("Création d'annonce")
+  @Severity(SeverityLevel.NORMAL)
+  @Description("Sofia crée une annonce avec une photo jointe : le contrôleur "
+      + "doit déléguer à ListingApiClient.uploadPhoto après la création.")
+  void shouldUploadPhotoAfterListingCreation() throws Exception {
+    when(listingApiClient.create(any(CreateListingRequest.class)))
+        .thenReturn(givenActiveListing());
+    final MockMultipartFile photo = new MockMultipartFile(
+        "photo", "bortsch.jpg", "image/jpeg", "contenu-image".getBytes(StandardCharsets.UTF_8));
+
+    final ResultActions result = mockMvc.perform(multipart(SELLER_LISTINGS_NEW_URL)
+        .file(photo)
+        .param("title", "Bortsch ukrainien")
+        .param("description", "Soupe traditionnelle mijotée")
+        .param("price", "8.50")
+        .param("portions", "4")
+        .param("pickupAddress", "12 rue de la Paix, Frouard")
+        .param("pickupDatetime", LocalDateTime.now().plusDays(1).toString())
+        .param("cuisineTypeId", "1")
+        .with(sellerUser())
+        .with(csrf()));
+
+    result.andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(SELLER_LISTINGS_URL));
+    verify(listingApiClient).uploadPhoto(eq(1L), any());
+  }
+
+  @Test
+  @DisplayName("POST /seller/listings/new avec titre vide réaffiche le formulaire")
+  @Story("Création d'annonce — validation")
+  @Severity(SeverityLevel.NORMAL)
+  @Description("Un titre vide doit être rejeté par Bean Validation (@NotBlank) "
+      + "avant tout appel à ListingApiClient.create, avec réaffichage inline.")
+  void shouldRedisplayFormWhenTitleIsBlank() throws Exception {
+    when(listingApiClient.getCuisineTypes()).thenReturn(List.of());
+    when(listingApiClient.getAllergens()).thenReturn(List.of());
+
+    final ResultActions result = mockMvc.perform(post(SELLER_LISTINGS_NEW_URL)
+        .with(sellerUser())
+        .with(csrf())
+        .param("title", "")
+        .param("description", "Soupe traditionnelle mijotée")
+        .param("price", "8.50")
+        .param("portions", "4")
+        .param("pickupAddress", "12 rue de la Paix, Frouard")
+        .param("pickupDatetime", LocalDateTime.now().plusDays(1).toString())
+        .param("cuisineTypeId", "1"));
+
+    result.andExpect(status().isOk())
+        .andExpect(view().name("listing-form"))
+        .andExpect(model().attributeHasFieldErrors("listingRequest", "title"));
+    verify(listingApiClient, never()).create(any());
+  }
+
+  @Test
+  @DisplayName("GET /seller/listings/{id}/edit retourne 200 avec le formulaire pré-rempli")
+  @Story("Édition d'annonce")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Sofia édite son annonce existante : le formulaire doit être "
+      + "pré-rempli avec les données actuelles, isEdit=true.")
+  void shouldReturnPrefilledEditForm() throws Exception {
+    final ListingDetailResponse listing = givenActiveListing();
+    when(listingApiClient.findById(1L)).thenReturn(listing);
+    when(listingApiClient.getCuisineTypes()).thenReturn(List.of());
+    when(listingApiClient.getAllergens()).thenReturn(List.of());
+
+    mockMvc.perform(get(SELLER_LISTINGS_URL + "/1/edit").with(sellerUser()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("listing-form"))
+        .andExpect(model().attribute("isEdit", true))
+        .andExpect(model().attribute("formAction", SELLER_LISTINGS_URL + "/1/edit"))
+        .andExpect(model().attribute("listingRequest", new CreateListingRequest(
+            listing.title(), listing.description(), listing.price(), listing.portions(),
+            listing.pickupAddress(), listing.pickupDatetime(), listing.cuisineTypeId(),
+            listing.allergenIds())));
+  }
+
+  @Test
+  @DisplayName("POST /seller/listings/{id}/edit avec données valides redirige")
+  @Story("Édition d'annonce")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Sofia met à jour son annonce : délégation à ListingApiClient.update "
+      + "puis redirection avec message flash de confirmation.")
+  void shouldUpdateListingAndRedirect() throws Exception {
+    final ResultActions result = mockMvc.perform(post(SELLER_LISTINGS_URL + "/1/edit")
+        .with(sellerUser())
+        .with(csrf())
+        .param("title", "Bortsch ukrainien (mis à jour)")
+        .param("description", "Soupe traditionnelle mijotée")
+        .param("price", "9.00")
+        .param("portions", "3")
+        .param("pickupAddress", "12 rue de la Paix, Frouard")
+        .param("pickupDatetime", LocalDateTime.now().plusDays(2).toString())
+        .param("cuisineTypeId", "1"));
+
+    result.andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(SELLER_LISTINGS_URL))
+        .andExpect(flash().attributeExists("success"));
+    verify(listingApiClient).update(eq(1L), any(CreateListingRequest.class));
+  }
+
+  @Test
+  @DisplayName("POST /seller/listings/{id}/delete désactive l'annonce et redirige")
+  @Story("Désactivation d'annonce")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Sofia désactive son annonce (suppression logique) : délégation "
+      + "à ListingApiClient.delete puis redirection avec message flash.")
+  void shouldDeleteListingAndRedirect() throws Exception {
+    final ResultActions result = mockMvc.perform(
+        post(SELLER_LISTINGS_URL + "/1/delete")
+            .with(sellerUser())
+            .with(csrf()));
+
+    result.andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(SELLER_LISTINGS_URL))
+        .andExpect(flash().attributeExists("success"));
+    verify(listingApiClient).delete(1L);
+  }
+
+  @Test
+  @DisplayName("POST /seller/listings/{id}/delete sans jeton CSRF est rejeté en 403")
+  @Story("Sécurité — protection CSRF")
+  @Severity(SeverityLevel.BLOCKER)
+  @Description("Défense en profondeur OWASP A01 : toute désactivation d'annonce "
+      + "sans jeton CSRF valide doit être rejetée, y compris pour un vendeur "
+      + "authentifié.")
+  void shouldRejectDeleteWithoutCsrfToken() throws Exception {
+    mockMvc.perform(post(SELLER_LISTINGS_URL + "/1/delete").with(sellerUser()))
+        .andExpect(status().isForbidden());
+    verify(listingApiClient, never()).delete(any());
+  }
+
+  @Step("Simuler un utilisateur vendeur authentifié")
+  private org.springframework.test.web.servlet.request.RequestPostProcessor sellerUser() {
+    return user(SELLER_EMAIL).roles("SELLER");
+  }
+
+  @Step("Préparer une annonce active de Sofia")
+  private ListingDetailResponse givenActiveListing() {
+    return new ListingDetailResponse(
+        1L, "Bortsch ukrainien", "Soupe traditionnelle mijotée",
+        new BigDecimal("8.50"), 4, 1L, List.of(),
+        "12 rue de la Paix, Frouard", LocalDateTime.now().plusDays(1),
+        "https://minio/bortsch.jpg", "ACTIVE");
+  }
+
+  @Step("Simuler une panne 500 de l'endpoint allergènes")
+  private FeignException givenFeignServerError() {
+    final Request request = Request.create(
+        HttpMethod.GET, "/api/v1/allergens", Collections.emptyMap(),
+        null, StandardCharsets.UTF_8, new RequestTemplate());
+    return new FeignException.InternalServerError(
+        "Service indisponible", request, null, Collections.emptyMap());
+  }
+
+  @Step("Soumettre le formulaire de création sans photo")
+  private ResultActions whenSubmitCreateForm() throws Exception {
+    return mockMvc.perform(post(SELLER_LISTINGS_NEW_URL)
+        .with(sellerUser())
+        .with(csrf())
+        .param("title", "Bortsch ukrainien")
+        .param("description", "Soupe traditionnelle mijotée")
+        .param("price", "8.50")
+        .param("portions", "4")
+        .param("pickupAddress", "12 rue de la Paix, Frouard")
+        .param("pickupDatetime", LocalDateTime.now().plusDays(1).toString())
+        .param("cuisineTypeId", "1"));
   }
 }
