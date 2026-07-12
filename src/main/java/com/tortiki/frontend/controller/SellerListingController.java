@@ -122,7 +122,7 @@ public class SellerListingController {
    */
   @GetMapping("/{id}/edit")
   public String editListingForm(@PathVariable final Long id, final Model model) {
-    var listing = listingApiClient.getById(id);
+    var listing = listingApiClient.findById(id);
     model.addAttribute("listingRequest", new CreateListingRequest(
         listing.title(),
         listing.description(),
