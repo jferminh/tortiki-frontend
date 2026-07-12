@@ -81,7 +81,8 @@ class SellerListingControllerTest {
         "ACTIVE");
 
     when(listingApiClient.getCuisineTypes())
-        .thenReturn(List.of(new CuisineTypeResponse(1L, "Ukrainienne", "Plat traditionnel ukrainienne", true)));
+        .thenReturn(List.of(new CuisineTypeResponse(
+            1L, "Ukrainienne", "Plat traditionnel ukrainienne", true)));
     when(listingApiClient.getAllergens())
         .thenReturn(List.of(new AllergenResponse(1L, "Gluten")));
   }
@@ -137,7 +138,9 @@ class SellerListingControllerTest {
   @Test
   @Story("Création d'annonce")
   @Severity(SeverityLevel.CRITICAL)
-  @Description("Un payload valide crée l'annonce via l'API et redirige vers la liste avec un message flash.")
+  @Description(
+      "Un payload valide crée l'annonce via l'API et redirige vers la liste avec un message flash."
+  )
   @DisplayName("POST /seller/listings/new valide crée l'annonce et redirige")
   void createListing_shouldRedirect_whenPayloadValid() throws Exception {
     when(listingApiClient.create(any())).thenReturn(detail);
@@ -178,7 +181,8 @@ class SellerListingControllerTest {
   @Test
   @Story("Édition d'annonce")
   @Severity(SeverityLevel.CRITICAL)
-  @Description("Une mise à jour valide appelle l'API update et redirige avec un message flash de succès.")
+  @Description(
+      "Une mise à jour valide appelle l'API update et redirige avec un message flash de succès.")
   @DisplayName("POST /seller/listings/{id}/edit valide met à jour et redirige")
   void updateListing_shouldRedirect_whenPayloadValid() throws Exception {
     when(listingApiClient.update(anyLong(), any())).thenReturn(detail);
@@ -203,7 +207,9 @@ class SellerListingControllerTest {
   @Test
   @Story("Désactivation d'annonce")
   @Severity(SeverityLevel.NORMAL)
-  @Description("La désactivation appelle le DELETE Feign (suppression logique) et redirige avec message flash.")
+  @Description(
+      "La désactivation appelle le DELETE Feign (suppression logique) "
+          + "et redirige avec message flash.")
   @DisplayName("POST /seller/listings/{id}/delete désactive l'annonce et redirige")
   void deleteListing_shouldRedirect_afterDeactivation() throws Exception {
     mockMvc.perform(post("/seller/listings/1/delete")

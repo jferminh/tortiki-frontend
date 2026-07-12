@@ -40,6 +40,15 @@ public interface ListingApiClient {
   List<ListingDetailResponse> getMyListings();
 
   /**
+   * Récupère le détail complet d'une annonce par son identifiant.
+   *
+   * @param id identifiant de l'annonce
+   * @return détail de l'annonce avec photo, allergènes et avis
+   */
+  @GetMapping("/api/v1/listings/{id}")
+  ListingDetailResponse findById(@PathVariable Long id);
+
+  /**
    * Récupère le détail d'une annonce par son identifiant.
    *
    * @param id identifiant de l'annonce
