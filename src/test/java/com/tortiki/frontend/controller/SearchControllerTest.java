@@ -21,6 +21,8 @@ import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Step;
 import io.qameta.allure.Story;
+import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +32,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * Tests unitaires de la couche web {@code SearchController}.
@@ -75,7 +75,7 @@ class SearchControllerTest {
   }
 
   @Test
-  @DisplayName("GET /search/results avec critères retourne 200 et la grille de résultats")
+  @DisplayName("GET /search/results avec critères complets retourne 200 et la grille de résultats")
   @Story("Résultats de recherche")
   @Severity(SeverityLevel.CRITICAL)
   @Description("Théo recherche des plats ukrainiens à Frouard : le contrôleur "
@@ -96,17 +96,19 @@ class SearchControllerTest {
   }
 
   @Test
-  @DisplayName("GET /search/results sans taille précisée applique la taille par défaut (12)")
-  @Story("Résultats de recherche")
-  @Severity(SeverityLevel.NORMAL)
-  @Description("Si le paramètre size n'est pas fourni (ou vaut 0), le contrôleur "
-      + "doit appliquer DEFAULT_PAGE_SIZE = 12 plutôt que de transmettre 0 à l'API.")
-  void shouldApplyDefaultPageSizeWhenSizeIsNotProvided() throws Exception {
-    when(searchApiClient.search(any(), any(), any(), any(), anyInt(), eq(12)))
+  @DisplayName("GET /search/results sans page ni size applique les valeurs par défaut (0, 12)")
+  @Story("Résultats de recherche — valeurs par défaut")
+  @Severity(SeverityLevel.BLOCKER)
+  @Description("Cas d'usage le plus fréquent : un visiteur lance une recherche "
+      + "simple sans préciser de pagination. Le contrôleur doit appliquer "
+      + "DEFAULT_PAGE = 0 et DEFAULT_PAGE_SIZE = 12 plutôt que d'échouer en 400 "
+      + "(régression corrigée : SearchCriteria.page/size étaient en int primitif).")
+  void shouldApplyDefaultPageAndSizeWhenNotProvided() throws Exception {
+    when(searchApiClient.search(any(), any(), any(), any(), anyInt(), anyInt()))
         .thenReturn(List.of());
     when(searchApiClient.getCuisineTypes()).thenReturn(List.of());
 
-    whenSearchWithCriteria("query=bortsch&page=0")
+    whenSearchWithCriteria("query=bortsch")
         .andExpect(status().isOk());
 
     verify(searchApiClient).search(eq("bortsch"), any(), any(), any(), eq(0), eq(12));
