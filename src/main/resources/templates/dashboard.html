@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr"
       xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      >
 <head>
     <title th:text="'Tableau de bord — Tortiki'">Tableau de bord — Tortiki</title>
     <th:block th:replace="~{fragments/layout :: head('Tableau de bord')}"></th:block>
@@ -63,6 +63,6 @@
 
 </main>
 
-<footer th:replace="~{layout :: footer}"></footer>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>
