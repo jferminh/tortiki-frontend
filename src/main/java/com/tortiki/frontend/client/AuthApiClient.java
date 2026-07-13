@@ -41,4 +41,14 @@ public interface AuthApiClient {
    */
   @PostMapping("/api/v1/auth/register")
   UserResponse register(@RequestBody RegisterRequest request);
+
+  /**
+   * Déconnecte l'utilisateur en invalidant sa session côté API.
+   *
+   * <p>Le cookie de session API est relayé automatiquement par
+   * {@code FeignConfig.sessionCookieInterceptor}, qui lit l'attribut stocké en
+   * session frontend — aucun paramètre explicite n'est donc nécessaire ici.</p>
+   */
+  @PostMapping("/api/v1/auth/logout")
+  void logout();
 }

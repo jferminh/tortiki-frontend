@@ -1,6 +1,7 @@
 package com.tortiki.frontend.config;
 
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +22,7 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
  * jamais vérifiée localement — elle est déléguée à
  * {@code ApiDelegatingAuthenticationProvider}, qui interroge l'API
  * et relie la session frontend à la session API via un cookie
- * stocké côté serveur (voir Issue 58).</p>
+ * stocké côté serveur.</p>
  *
  * <p>CSRF : activé sur tous les formulaires Thymeleaf. Le token CSRF
  * est injecté automatiquement via {@code th:action} de Thymeleaf +
@@ -153,7 +154,8 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(
       final HttpSecurity http,
-      final AuthenticationManager authenticationManager) throws Exception {
+      final AuthenticationManager authenticationManager, ApiLogoutHandler apiLogoutHandler)
+      throws Exception {
     http
         .authenticationManager(authenticationManager)
 
@@ -184,6 +186,7 @@ public class SecurityConfig {
         // Logout
         .logout(logout -> logout
             .logoutUrl(ROUTE_LOGOUT)
+            .addLogoutHandler(apiLogoutHandler)
             .logoutSuccessUrl(ROUTE_LOGIN_LOGOUT)
             .invalidateHttpSession(true)
             .deleteCookies("JSESSIONID")
