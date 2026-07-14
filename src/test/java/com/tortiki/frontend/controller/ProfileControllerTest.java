@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.tortiki.frontend.client.UserApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.user.UpdateUserProfileRequest;
 import com.tortiki.frontend.dto.user.UserResponse;
 import io.qameta.allure.Description;
@@ -44,6 +45,11 @@ import org.springframework.test.web.servlet.ResultActions;
  * {@code SecurityConfig} est importé pour vérifier que {@code /profile}
  * exige bien une authentification, cette route n'étant pas déclarée
  * dans {@code PUBLIC_ROUTES}.</p>
+ *
+ * <p>{@code ApiLogoutHandler} est également simulé : {@code @WebMvcTest}
+ * ne scanne pas les {@code @Component} hors couche web, alors que {@code
+ * SecurityConfig#securityFilterChain} en dépend désormais pour le logout
+ * délégué à l'API. Sans ce mock, le contexte Spring ne démarre pas.</p>
  */
 @WebMvcTest(ProfileController.class)
 @Import(SecurityConfig.class)
@@ -64,6 +70,9 @@ class ProfileControllerTest {
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
+
+  @MockitoBean
+  private ApiLogoutHandler apiLogoutHandler;
 
   @Test
   @DisplayName("GET /profile sans authentification redirige vers /login")
