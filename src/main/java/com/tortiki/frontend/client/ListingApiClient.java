@@ -3,8 +3,8 @@ package com.tortiki.frontend.client;
 import com.tortiki.frontend.dto.listing.AllergenResponse;
 import com.tortiki.frontend.dto.listing.CreateListingRequest;
 import com.tortiki.frontend.dto.listing.CuisineTypeResponse;
-import com.tortiki.frontend.dto.listing.ListingCardResponse;
 import com.tortiki.frontend.dto.listing.ListingDetailResponse;
+import com.tortiki.frontend.dto.listing.ListingSummaryResponse;
 import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,7 +36,7 @@ public interface ListingApiClient {
    * @return liste des annonces actives, au format carte
    */
   @GetMapping("/api/v1/listings")
-  List<ListingCardResponse> findAll();
+  List<ListingSummaryResponse> findAll();
 
   /**
    * Liste toutes les annonces du vendeur connecté, tous statuts confondus.
