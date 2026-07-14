@@ -10,6 +10,7 @@ import feign.httpclient.ApacheHttpClient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
@@ -129,10 +130,24 @@ public class FeignConfig {
    * {@code ContactApiClient#updateStatus} pour confirmer ou refuser une
    * demande de contact depuis le dashboard vendeur.</p>
    *
-   * @return le client Feign basé sur Apache HttpClient5
+   * <p>Correctif Issue 58 : la construction par défaut d'{@link ApacheHttpClient}
+   * active la gestion automatique des cookies d'Apache HttpClient, qui
+   * intercepte le header {@code Set-Cookie} de la réponse avant que Feign
+   * ne construise la {@code ResponseEntity} exposée à l'application. Ce
+   * comportement rendait le cookie de session {@code JSESSIONID} de
+   * {@code tortiki-api} invisible pour
+   * {@code ApiDelegatingAuthenticationProvider#storeApiSessionCookie},
+   * qui gère lui-même la session côté serveur, en dehors de tout cookie
+   * store HTTP. {@code disableCookieManagement()} désactive cette gestion
+   * native pour laisser le header brut accessible.</p>
+   *
+   * @return le client Feign basé sur Apache HttpClient5, sans gestion
+   *         automatique des cookies
    */
   @Bean
   public Client feignClient() {
-    return new ApacheHttpClient();
+    return new ApacheHttpClient(HttpClientBuilder.create()
+        .disableCookieManagement()
+        .build());
   }
 }

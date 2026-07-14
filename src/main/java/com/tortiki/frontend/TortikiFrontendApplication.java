@@ -1,6 +1,5 @@
 package com.tortiki.frontend;
 
-import com.tortiki.frontend.config.FeignHttpClientConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -11,7 +10,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * <p>Active Spring Cloud OpenFeign pour la communication avec tortiki-api.</p>
  */
 @SpringBootApplication
-@EnableFeignClients(defaultConfiguration = FeignHttpClientConfig.class)
+@EnableFeignClients
 public class TortikiFrontendApplication {
 
   /**
