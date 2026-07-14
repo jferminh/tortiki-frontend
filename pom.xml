@@ -66,6 +66,21 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
+		<!--
+          Client HTTP Apache remplaçant feign.Client$Default (basé sur
+          java.net.HttpURLConnection). Le client JDK ne supporte pas la
+          méthode HTTP PATCH — liste fermée de méthodes autorisées, limitation
+          historique du JDK (java.net.ProtocolException: Invalid HTTP method:
+          PATCH). Apache HttpClient5 gère nativement PATCH, PUT, DELETE avec
+          corps, sans contournement. Version alignée sur ${openfeign.version},
+          déjà utilisée pour feign-form-spring, afin d'éviter tout conflit
+          de version transitive avec feign-core. Voir Issue #XX.
+        -->
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-httpclient</artifactId>
+			<version>${openfeign.version}</version>
+		</dependency>
 
 		<!-- Validation -->
 		<dependency>
