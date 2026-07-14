@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.tortiki.frontend.client.SearchApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.listing.ListingCardResponse;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
@@ -39,6 +40,11 @@ import org.springframework.test.web.servlet.ResultActions;
  * <p>{@code SearchApiClient} est simulé via {@code @MockitoBean}. {@code
  * SecurityConfig} est importé pour vérifier les règles {@code permitAll}
  * réelles de {@code /search} et {@code /search/results}.</p>
+ *
+ * <p>{@code ApiLogoutHandler} est également simulé : {@code @WebMvcTest}
+ * ne scanne pas les {@code @Component} hors couche web, alors que {@code
+ * SecurityConfig#securityFilterChain} en dépend désormais pour le logout
+ * délégué à l'API. Sans ce mock, le contexte Spring ne démarre pas.</p>
  */
 @WebMvcTest(SearchController.class)
 @Import(SecurityConfig.class)
@@ -58,6 +64,9 @@ class SearchControllerTest {
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
+
+  @MockitoBean
+  private ApiLogoutHandler apiLogoutHandler;
 
   @Test
   @DisplayName("GET /search retourne 200 avec le formulaire vide et les types de cuisine")

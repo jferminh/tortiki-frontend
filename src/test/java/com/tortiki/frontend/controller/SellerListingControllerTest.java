@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.tortiki.frontend.client.ListingApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.listing.CreateListingRequest;
 import com.tortiki.frontend.dto.listing.ListingDetailResponse;
 import feign.FeignException;
@@ -56,6 +57,11 @@ import org.springframework.test.web.servlet.ResultActions;
  * /seller/listings/**} exige bien une authentification (SELLER_ROUTES),
  * l'authentification étant simulée via {@code user().roles("SELLER")}
  * puisque {@code ApiDelegatingAuthenticationProvider} est mocké.</p>
+ *
+ * <p>{@code ApiLogoutHandler} est également simulé : {@code @WebMvcTest}
+ * ne scanne pas les {@code @Component} hors couche web, alors que {@code
+ * SecurityConfig#securityFilterChain} en dépend désormais pour le logout
+ * délégué à l'API. Sans ce mock, le contexte Spring ne démarre pas.</p>
  */
 @WebMvcTest(SellerListingController.class)
 @Import(SecurityConfig.class)
@@ -76,6 +82,9 @@ class SellerListingControllerTest {
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
+
+  @MockitoBean
+  private ApiLogoutHandler apiLogoutHandler;
 
   @Test
   @DisplayName("GET /seller/listings sans authentification redirige vers /login")

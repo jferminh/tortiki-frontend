@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.tortiki.frontend.client.SearchApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.listing.CuisineTypeResponse;
 import feign.FeignException;
 import feign.Request;
@@ -48,6 +49,11 @@ import org.springframework.test.web.servlet.ResultActions;
  * confiance sur le comportement de sécurité, pas seulement sur le
  * contrôleur isolé. {@code ApiDelegatingAuthenticationProvider} est
  * simulé car il n'est jamais sollicité par un accès anonyme.</p>
+ *
+ * <p>{@code ApiLogoutHandler} est également simulé : {@code @WebMvcTest}
+ * ne scanne pas les {@code @Component} hors couche web, alors que {@code
+ * SecurityConfig#securityFilterChain} en dépend désormais pour le logout
+ * délégué à l'API. Sans ce mock, le contexte Spring ne démarre pas.</p>
  */
 @WebMvcTest(HomeController.class)
 @Import(SecurityConfig.class)
@@ -66,6 +72,9 @@ class HomeControllerTest {
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
+
+  @MockitoBean
+  private ApiLogoutHandler apiLogoutHandler;
 
   @Test
   @DisplayName("GET / retourne 200 et affiche les types de cuisine disponibles")

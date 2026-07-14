@@ -1,6 +1,5 @@
 package com.tortiki.frontend.controller;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -17,6 +16,7 @@ import com.tortiki.frontend.client.AdminApiClient;
 import com.tortiki.frontend.client.SearchApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.admin.AdminListingSummaryResponse;
 import com.tortiki.frontend.dto.admin.UpdateListingStatusRequest;
 import com.tortiki.frontend.dto.listing.CreateCuisineTypeRequest;
@@ -52,6 +52,11 @@ import org.springframework.test.web.servlet.ResultActions;
  * {@code tortiki-api} (403 si un non-admin authentifié appelle ces routes) ;
  * ce test ne vérifie donc que l'authentification, pas l'autorisation par rôle,
  * conformément à la Javadoc de {@code SecurityConfig}.</p>
+ *
+ * <p>{@code ApiLogoutHandler} est également simulé : {@code @WebMvcTest}
+ * ne scanne pas les {@code @Component} hors couche web, alors que {@code
+ * SecurityConfig#securityFilterChain} en dépend désormais pour le logout
+ * délégué à l'API. Sans ce mock, le contexte Spring ne démarre pas.</p>
  */
 @WebMvcTest(AdminController.class)
 @Import(SecurityConfig.class)
@@ -75,6 +80,9 @@ class AdminControllerTest {
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
+
+  @MockitoBean
+  private ApiLogoutHandler apiLogoutHandler;
 
   @Test
   @DisplayName("GET /admin sans authentification redirige vers /login")
@@ -135,7 +143,7 @@ class AdminControllerTest {
         .andExpect(redirectedUrl(ADMIN_LISTINGS_URL))
         .andExpect(flash().attributeExists("success"));
     verify(adminApiClient).updateListingStatus(
-        eq(1L), eq(new UpdateListingStatusRequest("INACTIVE")));
+        1L, new UpdateListingStatusRequest("INACTIVE"));
   }
 
   @Test

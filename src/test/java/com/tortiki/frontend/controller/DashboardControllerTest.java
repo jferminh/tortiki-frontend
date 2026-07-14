@@ -1,6 +1,5 @@
 package com.tortiki.frontend.controller;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -175,7 +174,7 @@ class DashboardControllerTest {
   @Step("Vérifier que ContactApiClient a reçu le bon changement de statut")
   private void thenApiClientReceivedStatusUpdate(
       final Long id, final ContactRequestStatus expectedStatus) {
-    verify(contactApiClient).updateStatus(eq(id),
-        eq(new UpdateContactRequestStatusRequest(expectedStatus)));
+    verify(contactApiClient).updateStatus(id,
+        new UpdateContactRequestStatusRequest(expectedStatus));
   }
 }
