@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.tortiki.frontend.client.AuthApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.user.RegisterRequest;
 import feign.FeignException;
 import feign.Request;
@@ -47,6 +48,11 @@ import org.springframework.test.web.servlet.ResultActions;
  * HomeControllerTest}) afin de vérifier les vraies règles {@code
  * permitAll()} de {@code /login} et {@code /register}, ainsi que la
  * protection CSRF réelle sur le formulaire d'inscription.</p>
+ *
+ * <p>{@code ApiLogoutHandler} est également simulé : {@code @WebMvcTest}
+ * ne scanne pas les {@code @Component} hors couche web, alors que {@code
+ * SecurityConfig#securityFilterChain} en dépend désormais pour le logout
+ * délégué à l'API. Sans ce mock, le contexte Spring ne démarre pas.</p>
  */
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
@@ -66,6 +72,9 @@ class AuthControllerTest {
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
+
+  @MockitoBean
+  private ApiLogoutHandler apiLogoutHandler;
 
   @Test
   @DisplayName("GET /login retourne 200 et affiche le formulaire de connexion")
