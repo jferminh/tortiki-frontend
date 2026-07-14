@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.tortiki.frontend.client.ContactApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.contact.ContactRequestStatus;
 import com.tortiki.frontend.dto.contact.ContactRequestSummaryResponse;
 import com.tortiki.frontend.dto.contact.CreateContactRequestRequest;
@@ -41,6 +42,12 @@ import org.springframework.test.web.servlet.ResultActions;
  * {@code SecurityConfig} est importé pour vérifier que {@code
  * /contact-requests} exige bien une authentification, cette route
  * n'étant pas déclarée dans {@code PUBLIC_ROUTES}.</p>
+ *
+ * <p>{@code ApiLogoutHandler} est également simulé : {@code @WebMvcTest}
+ * ne scanne pas les {@code @Component} hors de la couche web, alors que
+ * {@code SecurityConfig#securityFilterChain} en dépend désormais pour
+ * relayer la déconnexion à l'API (voir Javadoc de {@link ApiLogoutHandler}).
+ * Sans ce mock, le contexte Spring ne peut pas démarrer.</p>
  */
 @WebMvcTest(ContactController.class)
 @Import(SecurityConfig.class)
@@ -59,6 +66,9 @@ class ContactControllerTest {
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
+
+  @MockitoBean
+  private ApiLogoutHandler apiLogoutHandler;
 
   @Test
   @DisplayName("POST /contact-requests sans authentification redirige vers /login")
