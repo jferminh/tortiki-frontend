@@ -10,8 +10,10 @@ import com.tortiki.frontend.client.ListingApiClient;
 import com.tortiki.frontend.client.ReviewApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
+import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.contact.CreateContactRequestRequest;
 import com.tortiki.frontend.dto.listing.ListingDetailResponse;
+import com.tortiki.frontend.dto.listing.ListingSummaryResponse;
 import com.tortiki.frontend.dto.review.ReviewResponse;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
@@ -49,6 +51,7 @@ import org.springframework.test.web.servlet.ResultActions;
 class ListingControllerTest {
 
   private static final String LISTING_DETAIL_URL = "/listings/1";
+  private static final String LISTINGS_URL = "/listings";
 
   @Autowired
   private MockMvc mockMvc;
@@ -61,6 +64,9 @@ class ListingControllerTest {
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
+
+  @MockitoBean
+  private ApiLogoutHandler apiLogoutHandler;
 
   @Test
   @DisplayName("GET /listings/{id} retourne 200 avec l'annonce et ses avis")
@@ -130,6 +136,50 @@ class ListingControllerTest {
     whenViewListingDetail().andExpect(status().isOk());
   }
 
+  @Test
+  @DisplayName("GET /listings retourne 200 avec la liste des annonces actives")
+  @Story("Liste publique des plats disponibles")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Un visiteur anonyme consulte /listings : le modèle doit contenir "
+      + "la liste complète des annonces actives retournée par ListingApiClient.findAll.")
+  void shouldReturnListingsWithAllActiveAnnonces() throws Exception {
+    final List<ListingSummaryResponse> listings = givenActiveListingSummaries();
+    when(listingApiClient.findAll()).thenReturn(listings);
+
+    final ResultActions result = whenViewListings();
+
+    result.andExpect(status().isOk())
+        .andExpect(view().name("listings"))
+        .andExpect(model().attribute("listings", listings));
+  }
+
+  @Test
+  @DisplayName("GET /listings sans annonce active affiche une liste vide")
+  @Story("Liste publique des plats disponibles")
+  @Severity(SeverityLevel.NORMAL)
+  @Description("Cas limite : aucune annonce active n'existe encore, la vue doit "
+      + "tout de même s'afficher normalement avec l'état vide.")
+  void shouldReturnEmptyListingsWhenNoneActiveExist() throws Exception {
+    when(listingApiClient.findAll()).thenReturn(List.of());
+
+    final ResultActions result = whenViewListings();
+
+    result.andExpect(status().isOk())
+        .andExpect(model().attribute("listings", List.of()));
+  }
+
+  @Test
+  @DisplayName("GET /listings est accessible sans authentification (route permitAll)")
+  @Story("Accès public")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Vérifie le comportement réel de SecurityConfig : /listings/** est "
+      + "déclaré permitAll, cohérent avec /listings/{id} déjà testé.")
+  void shouldAllowAnonymousAccessToListings() throws Exception {
+    when(listingApiClient.findAll()).thenReturn(List.of());
+
+    whenViewListings().andExpect(status().isOk());
+  }
+
   @Step("Préparer une annonce active de Sofia")
   private ListingDetailResponse givenActiveListing() {
     return new ListingDetailResponse(
@@ -149,5 +199,24 @@ class ListingControllerTest {
   @Step("GET /listings/1 sans authentification")
   private ResultActions whenViewListingDetail() throws Exception {
     return mockMvc.perform(get(LISTING_DETAIL_URL));
+  }
+
+  @Step("Préparer deux annonces actives au format carte")
+  private List<ListingSummaryResponse> givenActiveListingSummaries() {
+    return List.of(
+        new ListingSummaryResponse(1L, "Bortsch ukrainien",
+            "Soupe traditionnelle mijotée", new BigDecimal("8.50"), 4,
+            "https://minio/bortsch.jpg", "12 rue de la Paix, Frouard",
+            "Ukrainienne", "sofia@tortiki.fr"),
+        new ListingSummaryResponse(2L, "Varenyky",
+            "Raviolis ukrainiens fait maison", new BigDecimal("6.00"), 6,
+            "https://minio/varenyky.jpg", "12 rue de la Paix, Frouard",
+            "Ukrainienne", "sofia@tortiki.fr")
+    );
+  }
+
+  @Step("GET /listings sans authentification")
+  private ResultActions whenViewListings() throws Exception {
+    return mockMvc.perform(get(LISTINGS_URL));
   }
 }

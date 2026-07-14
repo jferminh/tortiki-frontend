@@ -4,6 +4,7 @@ import com.tortiki.frontend.dto.listing.AllergenResponse;
 import com.tortiki.frontend.dto.listing.CreateListingRequest;
 import com.tortiki.frontend.dto.listing.CuisineTypeResponse;
 import com.tortiki.frontend.dto.listing.ListingDetailResponse;
+import com.tortiki.frontend.dto.listing.ListingSummaryResponse;
 import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,6 +25,18 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @FeignClient(name = "listing-api", url = "${tortiki.api.url}")
 public interface ListingApiClient {
+
+  /**
+   * Liste toutes les annonces actives, visibles par tout visiteur.
+   *
+   * <p>Consomme {@code GET /api/v1/listings}, endpoint public côté
+   * tortiki-api. Utilisé par la vue liste globale des plats disponibles,
+   * distincte de la recherche filtrée ({@code SearchApiClient}).</p>
+   *
+   * @return liste des annonces actives, au format carte
+   */
+  @GetMapping("/api/v1/listings")
+  List<ListingSummaryResponse> findAll();
 
   /**
    * Liste toutes les annonces du vendeur connecté, tous statuts confondus.

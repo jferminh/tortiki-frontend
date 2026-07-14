@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Tortiki — Tous les plats disponibles</title>
+    <th:block th:replace="~{fragments/layout :: head('Tous les plats')}"></th:block>
+</head>
+<body class="bg-light">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<section class="py-5">
+    <div class="container">
+        <h1 class="h4 fw-bold mb-1">Tous les plats disponibles</h1>
+        <p class="text-muted mb-4"
+           th:text="${#lists.size(listings)} + ' plat(s) proposé(s)'">0 plat</p>
+
+        <div class="row g-4">
+            <div class="col-12 col-sm-6 col-md-4"
+                 th:each="listing : ${listings}">
+                <a th:href="@{/listings/{id}(id=${listing.id})}"
+                   class="text-decoration-none text-dark">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img th:src="${listing.photoUrl}"
+                             class="card-img-top"
+                             style="height: 180px; object-fit: cover;"
+                             th:alt="${listing.title}"/>
+                        <div class="card-body">
+                            <h3 class="h6 fw-semibold mb-1" th:text="${listing.title}">Plat</h3>
+                            <p class="small text-muted mb-1" th:text="${listing.cuisineTypeName}">Cuisine</p>
+                            <p class="small text-muted mb-2" th:text="${listing.pickupAddress}">
+                                Adresse de retrait
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <p class="fw-bold text-success mb-0"
+                                   th:text="${listing.price} + ' €'">Prix</p>
+                                <p class="small text-muted mb-0"
+                                   th:text="${listing.portions} + ' portion(s)'">Portions</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-12 text-center text-muted py-5"
+                 th:if="${#lists.isEmpty(listings)}">
+                <div class="fs-1 mb-3">🍽️</div>
+                <h3 class="h5">Aucun plat disponible pour le moment</h3>
+                <p class="mb-0">Revenez bientôt, de nouvelles annonces arrivent régulièrement.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
