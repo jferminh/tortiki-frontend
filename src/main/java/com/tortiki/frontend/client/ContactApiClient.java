@@ -22,13 +22,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface ContactApiClient {
 
   /**
-   * Récupère les demandes de contact reçues par le vendeur connecté.
+   * Récupère les demandes de contact reçues par le vendeur authentifié.
    *
-   * @param seller email du vendeur (valeur "me" transmise par le controller)
-   * @return liste des résumés de demandes
+   * <p>L'identité du vendeur est résolue côté {@code tortiki-api} depuis le
+   * {@code Principal} de la session Spring Security, jamais transmise en paramètre :
+   * la session doit être propagée entre le frontend et l'API (cookie forwarding).</p>
+   *
+   * @return liste des résumés de demandes reçues par le vendeur connecté
    */
   @GetMapping("/api/v1/seller-dashboard/contact-requests")
-  List<ContactRequestSummaryResponse> getDashboard(@RequestParam("seller") String seller);
+  List<ContactRequestSummaryResponse> getDashboard();
 
   /**
    * Confirme ou refuse une demande de contact.
