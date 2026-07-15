@@ -3,14 +3,18 @@ package com.tortiki.frontend.dto.review;
 import java.time.LocalDateTime;
 
 /**
- * Réponse après création d'une évaluation.
+ * Représentation d'une évaluation reçue depuis tortiki-api.
  *
- * @param id identifiant de l'évaluation créée
- * @param listingId identifiant de l'annonce évaluée
- * @param reviewerFirstName prénom de l'auteur
- * @param rating note attribuée (1-5)
- * @param comment commentaire
- * @param createdAt date de création
+ * <p>Miroir exact du contrat {@code ReviewResponse} côté backend —
+ * expose uniquement le prénom de l'acheteur, jamais son email
+ * (minimisation RGPD déjà actée côté API).</p>
+ *
+ * @param id                identifiant de l'évaluation
+ * @param listingId         identifiant de l'annonce évaluée
+ * @param reviewerFirstName prénom de l'acheteur auteur de l'évaluation
+ * @param rating            note attribuée, comprise entre 1 et 5
+ * @param comment           commentaire libre, éventuellement absent
+ * @param createdAt         date et heure de création de l'évaluation
  */
 public record ReviewResponse(
     Long id,
