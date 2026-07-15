@@ -68,10 +68,10 @@ class DashboardControllerTest {
   @Story("Consultation du tableau de bord")
   @Severity(SeverityLevel.CRITICAL)
   @Description("Sofia (ROLE_SELLER) charge son dashboard et voit la liste de ses "
-      + "demandes de contact reçues, rendue par ContactApiClient.getDashboard.")
+      + "demandes de contact reçues, rendue par ContactApiClient.getDashboard().")
   void shouldReturnDashboardWithRequestsForAuthenticatedSeller() throws Exception {
     final ContactRequestSummaryResponse request = givenPendingContactRequest();
-    when(contactApiClient.getDashboard(SELLER_EMAIL)).thenReturn(List.of(request));
+    when(contactApiClient.getDashboard()).thenReturn(List.of(request));
 
     final ResultActions result = whenGetDashboardAs(SELLER_EMAIL);
 
@@ -85,7 +85,7 @@ class DashboardControllerTest {
   @Description("Cas limite : aucune demande de contact reçue, le dashboard doit "
       + "s'afficher normalement avec une liste vide, sans erreur ni page blanche.")
   void shouldReturnDashboardWithEmptyListWhenNoRequests() throws Exception {
-    when(contactApiClient.getDashboard(SELLER_EMAIL)).thenReturn(List.of());
+    when(contactApiClient.getDashboard()).thenReturn(List.of());
 
     final ResultActions result = whenGetDashboardAs(SELLER_EMAIL);
 
