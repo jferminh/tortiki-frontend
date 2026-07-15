@@ -45,13 +45,13 @@
             <p class="mb-4" th:text="${listing.description}">Description du plat.</p>
 
             <!-- Allergènes -->
-            <div class="mb-4" th:if="${!listing.allergenIds.isEmpty()}">
+            <div class="mb-4" th:if="${!listing.allergenNames.isEmpty()}">
                 <h2 class="h6 fw-semibold mb-2">Allergènes présents</h2>
                 <span class="badge bg-warning text-dark me-1"
-                      th:each="allergenId : ${listing.allergenIds}"
-                      th:text="'Allergène #' + ${allergenId}">Allergène</span>
+                      th:each="allergenName : ${listing.allergenNames}"
+                      th:text="${allergenName}">Allergène</span>
             </div>
-            <p class="text-muted small mb-4" th:if="${listing.allergenIds.isEmpty()}">
+            <p class="text-muted small mb-4" th:if="${listing.allergenNames.isEmpty()}">
                 Aucun allergène signalé par le vendeur.
             </p>
 
@@ -105,15 +105,23 @@
             <div class="col-12 col-md-6" th:each="review : ${reviews}">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
                             <span class="fw-semibold" th:text="${review.reviewerFirstName}">Prénom</span>
-                            <span class="text-warning" aria-label="Note sur 5">
-                                <span th:each="i : ${#numbers.sequence(1, review.rating)}">★</span>
-                                <span th:each="i : ${#numbers.sequence(review.rating + 1, 5)}"
-                                      class="text-muted">★</span>
-                            </span>
+                            <span aria-hidden="true" class="text-warning small">
+                            <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                <span th:text="${i <= review.rating} ? '★' : '☆'"
+                                      th:class="${i <= review.rating} ? 'text-warning' : 'text-muted'"></span>
+                            </th:block>
+                        </span>
                         </div>
-                        <p class="small text-muted mb-0" th:text="${review.comment}">Commentaire</p>
+                        <p class="visually-hidden"
+                           th:text="'Note attribuée : ' + ${review.rating} + ' sur 5'">Note</p>
+                        <p class="text-muted small mb-2"
+                           th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy')}">Date</p>
+                        <p class="small mb-0"
+                           th:text="${review.comment != null and !review.comment.isBlank()} ? ${review.comment} : 'Aucun commentaire laissé.'">
+                            Commentaire
+                        </p>
                     </div>
                 </div>
             </div>
