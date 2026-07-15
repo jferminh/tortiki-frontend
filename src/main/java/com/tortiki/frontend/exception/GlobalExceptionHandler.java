@@ -160,6 +160,30 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * Intercepte un conflit métier (409) renvoyé par tortiki-api.
+   *
+   * <p>Se produit typiquement quand un acheteur soumet un second avis pour
+   * la même annonce, ou une seconde demande de contact déjà existante —
+   * la règle d'unicité est appliquée côté service métier, jamais recalculée
+   * ici (défense en profondeur, cohérent avec {@code SubmitReviewService}).</p>
+   *
+   * @param ex       l'exception Feign 409 levée par l'appel distant
+   * @param request  la requête HTTP en cours, pour récupérer le referer
+   * @param redirectAttributes attributs flash pour le message d'erreur
+   * @return redirection vers la page précédente avec message d'erreur
+   */
+  @ExceptionHandler(FeignException.Conflict.class)
+  public String handleFeignConflict(
+      final FeignException.Conflict ex,
+      final HttpServletRequest request,
+      final RedirectAttributes redirectAttributes) {
+    log.warn("Conflit métier distant sur {} : {}", request.getRequestURI(), ex.getMessage());
+    redirectAttributes.addFlashAttribute(FLASH_ATTR_ERROR,
+        "Cette action a déjà été effectuée. Vous ne pouvez pas la soumettre deux fois.");
+    return REDIRECT_PREFIX + refererOrFallback(request);
+  }
+
+  /**
    * Détermine la page de retour à partir du referer HTTP, avec repli
    * sur le tableau de bord vendeur si l'en-tête est absent.
    *

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Laisser un avis')}">
+    <title>Laisser un avis — Tortiki</title>
+</head>
+
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main>
+    <div class="container py-4 py-md-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+
+                <h1 class="h3 mb-4">Laisser un avis</h1>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <img th:if="${listing.photoUrl() != null}"
+                             th:src="${listing.photoUrl()}"
+                             style="width: 72px; height: 72px; object-fit: cover; border-radius: 0.5rem;"
+                             th:alt="${listing.title()}">
+                        <div th:unless="${listing.photoUrl() != null}"
+                             class="bg-light d-flex align-items-center justify-content-center"
+                             style="width: 72px; height: 72px; border-radius: 0.5rem;">
+                            <span class="text-muted small">Pas de photo</span>
+                        </div>
+                        <h2 class="h6 mb-0" th:text="${listing.title()}">Titre de l'annonce</h2>
+                    </div>
+                </div>
+
+                <form th:action="@{/reviews}" th:object="${reviewRequest}" method="post" novalidate>
+
+                    <input type="hidden" th:field="*{listingId}">
+
+                    <fieldset class="mb-4">
+                        <legend class="form-label d-block h6">Votre note</legend>
+                        <div class="d-flex gap-3">
+                            <div class="form-check" th:each="value : ${#numbers.sequence(1, 5)}">
+                                <label class="form-check-label d-flex align-items-center gap-1">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="rating"
+                                           th:value="${value}"
+                                           th:checked="${reviewRequest.rating() != null and reviewRequest.rating() == value}">
+                                    <span th:text="${value}">5</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="text-danger small mt-1"
+                             th:if="${#fields.hasErrors('rating')}"
+                             th:errors="*{rating}">
+                            Erreur de note
+                        </div>
+                    </fieldset>
+
+                    <div class="mb-4">
+                        <label for="comment" class="form-label">Commentaire (facultatif)</label>
+                        <textarea class="form-control"
+                                  id="comment"
+                                  th:field="*{comment}"
+                                  rows="4"
+                                  maxlength="500"
+                                  placeholder="Partagez votre expérience avec ce plat..."></textarea>
+                        <div class="text-danger small mt-1"
+                             th:if="${#fields.hasErrors('comment')}"
+                             th:errors="*{comment}">
+                            Erreur de commentaire
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/buyer/requests}" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-success">Publier mon avis</button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
