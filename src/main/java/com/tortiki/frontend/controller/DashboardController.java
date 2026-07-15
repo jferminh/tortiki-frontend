@@ -40,15 +40,18 @@ public class DashboardController {
   /**
    * Affiche le tableau de bord vendeur avec les demandes de contact reçues.
    *
+   * <p>L'identité du vendeur est résolue par {@code tortiki-api} depuis le
+   * {@code Principal} de la session propagée via {@code FeignConfig}, jamais
+   * transmise en paramètre par le client.</p>
+   *
    * @param model modèle Thymeleaf
-   * @param principal utilisateur authentifié (email résolu par Spring Security)
+   * @param principal utilisateur authentifié, email résolu par Spring Security
    * @return nom de la vue {@code dashboard}
    */
   @GetMapping
   public String dashboard(final Model model, final Principal principal) {
-    log.info("Chargement du dashboard vendeur pour : {}", principal.getName());
-    final List<ContactRequestSummaryResponse> requests =
-        contactApiClient.getDashboard(principal.getName());
+    log.info("Chargement du dashboard vendeur pour {}", principal.getName());
+    final List<ContactRequestSummaryResponse> requests = contactApiClient.getDashboard();
     model.addAttribute(ATTR_REQUESTS, requests);
     return VIEW_DASHBOARD;
   }
