@@ -113,6 +113,11 @@ public class SecurityConfig {
       "/admin/**"
   };
 
+  /** Routes réservées aux acheteurs — authentification vérifiée ici, rôle vérifié côté API. */
+  private static final String[] BUYER_ROUTES = {
+      "/buyer/**"
+  };
+
   /**
    * Gestionnaire d'authentification explicite, utilisant exclusivement
    * {@code ApiDelegatingAuthenticationProvider}.
@@ -163,6 +168,7 @@ public class SecurityConfig {
             .requestMatchers(PUBLIC_ROUTES).permitAll()
             .requestMatchers(SELLER_ROUTES).authenticated()
             .requestMatchers(ADMIN_ROUTES).authenticated()
+            .requestMatchers(BUYER_ROUTES).authenticated()
             .anyRequest().authenticated()
         )
 
