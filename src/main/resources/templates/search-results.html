@@ -11,6 +11,8 @@
 <section class="bg-white py-4 border-bottom">
     <div class="container">
         <form th:action="@{/search/results}" method="get" class="row g-2">
+            <input type="hidden" name="query" th:value="${criteria.query}"/>
+            <input type="hidden" name="postalCode" th:value="${criteria.postalCode}"/>
             <div class="col-12 col-md-4">
                 <label for="filterCity" class="visually-hidden">Ville</label>
                 <input type="text" id="filterCity" name="city" th:value="${criteria.city}"
