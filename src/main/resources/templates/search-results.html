@@ -58,7 +58,7 @@
                                 Vendeur
                             </p>
                             <p class="fw-bold text-success mb-0"
-                               th:text="${listing.price} + ' €'">Prix</p>
+                               th:text="${#numbers.formatDecimal(listing.price, 1, 2, 'COMMA')} + ' €'">Prix</p>
                         </div>
                     </div>
                 </a>
