@@ -13,6 +13,9 @@
             <div class="col-12 col-md-8 col-lg-6">
 
                 <h1 class="h3 mb-4">Laisser un avis</h1>
+                <div class="alert alert-danger" th:if="${error}" th:text="${error}" role="alert">
+                    Une erreur est survenue.
+                </div>
 
                 <div class="card shadow-sm mb-4">
                     <div class="card-body d-flex align-items-center gap-3">
@@ -84,5 +87,6 @@
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 
 <script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/review-form-validation.js}"></script>
 </body>
 </html>
