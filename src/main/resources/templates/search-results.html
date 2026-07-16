@@ -6,7 +6,7 @@
 </head>
 <body class="bg-light">
 
-<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<nav th:replace="~{fragments/layout :: navbar}" aria-label="Navigation principale"></nav>
 
 <section class="bg-white py-4 border-bottom">
     <div class="container">
@@ -69,6 +69,33 @@
                 <p class="mb-0">Essayez une autre ville or un autre type de cuisine.</p>
             </div>
         </div>
+        <nav th:if="${#lists.size(results) > 0}"
+             aria-label="Pagination des résultats"
+             class="d-flex justify-content-center mt-4">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${criteria.page() == null or criteria.page() == 0} ? 'disabled'">
+                    <a th:if="${criteria.page() != null and criteria.page() > 0}"
+                       class="page-link"
+                       th:href="@{/search/results(query=${criteria.query()}, city=${criteria.city()}, postalCode=${criteria.postalCode()}, cuisineTypeId=${criteria.cuisineTypeId()}, page=${criteria.page() - 1}, size=${criteria.size()})}">
+                        Précédent
+                    </a>
+                    <span th:unless="${criteria.page() != null and criteria.page() > 0}"
+                          class="page-link" aria-disabled="true">Précédent</span>
+                </li>
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link" th:text="${(criteria.page() != null ? criteria.page() : 0) + 1}">1</span>
+                </li>
+                <li class="page-item" th:classappend="${#lists.size(results) < 12} ? 'disabled'">
+                    <a th:if="${#lists.size(results) >= 12}"
+                       class="page-link"
+                       th:href="@{/search/results(query=${criteria.query()}, city=${criteria.city()}, postalCode=${criteria.postalCode()}, cuisineTypeId=${criteria.cuisineTypeId()}, page=${(criteria.page() != null ? criteria.page() : 0) + 1}, size=${criteria.size()})}">
+                        Suivant
+                    </a>
+                    <span th:unless="${#lists.size(results) >= 12}"
+                          class="page-link" aria-disabled="true">Suivant</span>
+                </li>
+            </ul>
+        </nav>
     </div>
 </section>
 
