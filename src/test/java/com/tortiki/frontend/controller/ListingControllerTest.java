@@ -6,15 +6,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import com.tortiki.frontend.client.AllergenApiClient;
 import com.tortiki.frontend.client.ListingApiClient;
 import com.tortiki.frontend.client.ReviewApiClient;
 import com.tortiki.frontend.config.SecurityConfig;
 import com.tortiki.frontend.config.security.ApiDelegatingAuthenticationProvider;
 import com.tortiki.frontend.config.security.ApiLogoutHandler;
 import com.tortiki.frontend.dto.contact.CreateContactRequestRequest;
+import com.tortiki.frontend.dto.listing.AllergenResponse;
 import com.tortiki.frontend.dto.listing.ListingDetailResponse;
 import com.tortiki.frontend.dto.listing.ListingSummaryResponse;
 import com.tortiki.frontend.dto.review.ReviewResponse;
+import feign.FeignException;
+import feign.Request;
+import feign.Request.HttpMethod;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -25,6 +30,7 @@ import io.qameta.allure.Story;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,10 +44,11 @@ import org.springframework.test.web.servlet.ResultActions;
 /**
  * Tests unitaires de la couche web {@code ListingController}.
  *
- * <p>{@code ListingApiClient} et {@code ReviewApiClient} sont simulés via
- * {@code @MockitoBean}. {@code SecurityConfig} est importé pour vérifier
- * que {@code /listings/**} est bien déclaré {@code permitAll()} — Théo
- * doit pouvoir consulter une fiche plat avant de se connecter.</p>
+ * <p>{@code ListingApiClient}, {@code ReviewApiClient} et
+ * {@code AllergenApiClient} sont simulés via {@code @MockitoBean}.
+ * {@code SecurityConfig} est importé pour vérifier que {@code /listings/**}
+ * est bien déclaré {@code permitAll()} — Théo doit pouvoir consulter une
+ * fiche plat avant de se connecter.</p>
  */
 @WebMvcTest(ListingController.class)
 @Import(SecurityConfig.class)
@@ -61,6 +68,9 @@ class ListingControllerTest {
 
   @MockitoBean
   private ReviewApiClient reviewApiClient;
+
+  @MockitoBean
+  private AllergenApiClient allergenApiClient;
 
   @MockitoBean
   private ApiDelegatingAuthenticationProvider authenticationProvider;
@@ -137,6 +147,42 @@ class ListingControllerTest {
   }
 
   @Test
+  @DisplayName("GET /listings/{id} résout les noms d'allergènes depuis leurs identifiants")
+  @Story("Consultation publique d'une fiche plat")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Le bortsch de Sofia contient gluten (id 1) et œufs (id 3) : le "
+      + "modèle doit exposer allergenNames = [\"Gluten\", \"Œufs\"], résolu via "
+      + "AllergenApiClient.getAllergens à partir des allergenIds de l'annonce.")
+  void shouldResolveAllergenNamesFromIds() throws Exception {
+    when(listingApiClient.findById(1L)).thenReturn(givenListingWithAllergenIds(List.of(1L, 3L)));
+    when(reviewApiClient.findByListingId(1L)).thenReturn(List.of());
+    when(allergenApiClient.getAllergens()).thenReturn(givenAllAllergens());
+
+    final ResultActions result = whenViewListingDetail();
+
+    result.andExpect(status().isOk())
+        .andExpect(model().attribute("allergenNames", List.of("Gluten", "Œufs")));
+  }
+
+  @Test
+  @DisplayName("GET /listings/{id} affiche la fiche sans allergènes si le service est indisponible")
+  @Story("Consultation publique d'une fiche plat")
+  @Severity(SeverityLevel.NORMAL)
+  @Description("Dégradation progressive : si AllergenApiClient.getAllergens échoue "
+      + "(panne réseau, service down), la fiche doit tout de même s'afficher avec "
+      + "allergenNames vide plutôt que de renvoyer une erreur 500.")
+  void shouldReturnEmptyAllergenNamesWhenAllergenServiceUnavailable() throws Exception {
+    when(listingApiClient.findById(1L)).thenReturn(givenListingWithAllergenIds(List.of(1L)));
+    when(reviewApiClient.findByListingId(1L)).thenReturn(List.of());
+    when(allergenApiClient.getAllergens()).thenThrow(givenAllergenServiceUnavailable());
+
+    final ResultActions result = whenViewListingDetail();
+
+    result.andExpect(status().isOk())
+        .andExpect(model().attribute("allergenNames", List.of()));
+  }
+
+  @Test
   @DisplayName("GET /listings retourne 200 avec la liste des annonces actives")
   @Story("Liste publique des plats disponibles")
   @Severity(SeverityLevel.CRITICAL)
@@ -180,13 +226,33 @@ class ListingControllerTest {
     whenViewListings().andExpect(status().isOk());
   }
 
-  @Step("Préparer une annonce active de Sofia")
+  @Step("Préparer une annonce active de Sofia sans allergène")
   private ListingDetailResponse givenActiveListing() {
+    return givenListingWithAllergenIds(List.of());
+  }
+
+  @Step("Préparer une annonce active de Sofia avec des allergènes donnés")
+  private ListingDetailResponse givenListingWithAllergenIds(final List<Long> allergenIds) {
     return new ListingDetailResponse(
         1L, "Bortsch ukrainien", "Soupe traditionnelle mijotée",
-        new BigDecimal("8.50"), 4, 1L, List.of(),
+        new BigDecimal("8.50"), 4, 1L, allergenIds,
         "12 rue de la Paix, Frouard", LocalDateTime.now().plusDays(1),
         "https://minio/bortsch.jpg", "ACTIVE");
+  }
+
+  @Step("Préparer le référentiel complet des allergènes")
+  private List<AllergenResponse> givenAllAllergens() {
+    return List.of(
+        new AllergenResponse(1L, "Gluten"),
+        new AllergenResponse(2L, "Lactose"),
+        new AllergenResponse(3L, "Œufs"));
+  }
+
+  @Step("Simuler une panne du service allergènes")
+  private FeignException givenAllergenServiceUnavailable() {
+    final Request request = Request.create(HttpMethod.GET, "/api/v1/allergens",
+        Map.of(), null, null, null);
+    return new FeignException.InternalServerError("Service indisponible", request, null, null);
   }
 
   @Step("Préparer deux avis sur l'annonce")
