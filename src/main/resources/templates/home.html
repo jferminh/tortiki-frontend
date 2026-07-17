@@ -25,9 +25,15 @@
                 <input type="text"
                        id="city"
                        name="city"
+                       list="active-cities"
                        class="form-control form-control-lg"
                        placeholder="Votre ville (ex : Lyon, Marseille…)"
-                       aria-label="Ville de recherche"/>
+                       aria-label="Ville de recherche"
+                       autocomplete="off"/>
+                <datalist id="active-cities">
+                    <option th:each="activeCity : ${activeCities}"
+                            th:value="${activeCity}"></option>
+                </datalist>
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-success btn-lg px-4">
