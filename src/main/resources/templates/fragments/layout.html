@@ -30,14 +30,14 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
                     <a class="nav-link"
-                       th:classappend="${#request.requestURI == '/'} ? 'active'"
-                       th:attrappend="aria-current=${#request.requestURI == '/'} ? 'page'"
+                       th:classappend="${currentUri == '/'} ? 'active'"
+                       th:attrappend="aria-current=${currentUri == '/'} ? 'page'"
                        th:href="@{/}">Accueil</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link"
-                       th:classappend="${#request.requestURI == '/search' or #request.requestURI == '/search-results'} ? 'active'"
-                       th:attrappend="aria-current=${#request.requestURI == '/search' or #request.requestURI == '/search-results'} ? 'page'"
+                       th:classappend="${currentUri == '/search' or currentUri == '/search-results'} ? 'active'"
+                       th:attrappend="aria-current=${currentUri == '/search' or currentUri == '/search-results'} ? 'page'"
                        th:href="@{/search}">Rechercher</a>
                 </li>
             </ul>
