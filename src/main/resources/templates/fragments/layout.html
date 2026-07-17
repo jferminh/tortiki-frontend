@@ -21,22 +21,24 @@
         <a class="navbar-brand fw-bold text-success" th:href="@{/}">
             🍲 Tortiki
         </a>
-        <button class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarMain"
-                aria-controls="navbarMain"
-                aria-expanded="false"
-                aria-label="Ouvrir le menu de navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarMain" aria-controls="navbarMain"
+                aria-expanded="false" aria-label="Ouvrir le menu de navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/}">Accueil</a>
+                    <a class="nav-link"
+                       th:classappend="${currentUri == '/'} ? 'active'"
+                       th:attrappend="aria-current=${currentUri == '/'} ? 'page'"
+                       th:href="@{/}">Accueil</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/search}">Rechercher</a>
+                    <a class="nav-link"
+                       th:classappend="${currentUri == '/search' or currentUri == '/search-results'} ? 'active'"
+                       th:attrappend="aria-current=${currentUri == '/search' or currentUri == '/search-results'} ? 'page'"
+                       th:href="@{/search}">Rechercher</a>
                 </li>
             </ul>
             <div class="d-flex gap-2">
@@ -46,9 +48,19 @@
                 <a sec:authorize="isAnonymous()"
                    th:href="@{/register}"
                    class="btn btn-success btn-sm">Créer un compte</a>
-                <a sec:authorize="isAuthenticated()"
-                   th:href="@{/dashboard}"
-                   class="btn btn-outline-success btn-sm">Mon espace</a>
+
+                <!-- SELLER : route reelle /dashboard, alignee sur RoleBasedAuthenticationSuccessHandler -->
+                <a sec:authorize="hasRole('SELLER')"
+                   th:href="@{/seller/listings}"
+                   class="btn btn-outline-success btn-sm">Mes annonces</a>
+
+                <!-- BUYER : route existante /buyer/requests -->
+                <a sec:authorize="hasRole('BUYER')"
+                   th:href="@{/buyer/requests}"
+                   class="btn btn-outline-success btn-sm">Mes demandes</a>
+
+                <!-- ADMIN : pas de lien navbar par choix produit, l'Admin accede a /admin via redirection post-login uniquement -->
+
                 <form sec:authorize="isAuthenticated()"
                       th:action="@{/logout}"
                       method="post"
