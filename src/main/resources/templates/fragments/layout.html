@@ -51,7 +51,7 @@
 
                 <!-- SELLER : route reelle /dashboard, alignee sur RoleBasedAuthenticationSuccessHandler -->
                 <a sec:authorize="hasRole('SELLER')"
-                   th:href="@{/dashboard}"
+                   th:href="@{/seller/listings}"
                    class="btn btn-outline-success btn-sm">Mes annonces</a>
 
                 <!-- BUYER : route existante /buyer/requests -->
