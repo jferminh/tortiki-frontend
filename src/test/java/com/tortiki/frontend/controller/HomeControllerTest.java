@@ -85,6 +85,7 @@ class HomeControllerTest {
   void shouldReturnHomeWithCuisineTypes() throws Exception {
     final List<CuisineTypeResponse> cuisineTypes = givenActiveCuisineTypes();
     when(searchApiClient.getCuisineTypes()).thenReturn(cuisineTypes);
+    when(searchApiClient.getActiveCities()).thenReturn(List.of());
 
     final ResultActions result = whenGetHome();
 
@@ -99,6 +100,7 @@ class HomeControllerTest {
       + "d'accueil doit tout de même s'afficher sans erreur ni section cassée.")
   void shouldReturnHomeWithEmptyListWhenNoCuisineTypes() throws Exception {
     when(searchApiClient.getCuisineTypes()).thenReturn(List.of());
+    when(searchApiClient.getActiveCities()).thenReturn(List.of());
 
     final ResultActions result = whenGetHome();
 
@@ -115,6 +117,7 @@ class HomeControllerTest {
       + "au visiteur (circuit breaker soft).")
   void shouldDegradeGracefullyWhenApiIsUnavailable() throws Exception {
     when(searchApiClient.getCuisineTypes()).thenThrow(givenFeignServerError());
+    when(searchApiClient.getActiveCities()).thenReturn(List.of());
 
     final ResultActions result = whenGetHome();
 
@@ -129,8 +132,58 @@ class HomeControllerTest {
       + "être déclarée permitAll, contrairement aux routes /dashboard et /admin.")
   void shouldAllowAnonymousAccessToHome() throws Exception {
     when(searchApiClient.getCuisineTypes()).thenReturn(List.of());
+    when(searchApiClient.getActiveCities()).thenReturn(List.of());
 
     mockMvc.perform(get(HOME_URL)).andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("GET / retourne 200 et affiche les villes actives disponibles")
+  @Story("Autocomplétion recherche ville")
+  @Severity(SeverityLevel.CRITICAL)
+  @Description("Théo (visiteur non authentifié) charge la page d'accueil et le champ "
+      + "de recherche est alimenté par les villes actives, rendues à partir de "
+      + "SearchApiClient.getActiveCities.")
+  void shouldReturnHomeWithActiveCities() throws Exception {
+    when(searchApiClient.getCuisineTypes()).thenReturn(List.of());
+    final List<String> activeCities = givenActiveCities();
+    when(searchApiClient.getActiveCities()).thenReturn(activeCities);
+
+    final ResultActions result = whenGetHome();
+
+    thenHomeIsRenderedWithActiveCities(result, activeCities);
+  }
+
+  @Test
+  @DisplayName("GET / retourne 200 avec une liste vide si aucune ville active")
+  @Story("Autocomplétion recherche ville")
+  @Severity(SeverityLevel.NORMAL)
+  @Description("Cas limite : aucune annonce active en base, la page d'accueil doit "
+      + "tout de même s'afficher avec un champ de recherche sans suggestion.")
+  void shouldReturnHomeWithEmptyListWhenNoActiveCities() throws Exception {
+    when(searchApiClient.getCuisineTypes()).thenReturn(List.of());
+    when(searchApiClient.getActiveCities()).thenReturn(List.of());
+
+    final ResultActions result = whenGetHome();
+
+    thenHomeIsRenderedWithActiveCities(result, List.of());
+  }
+
+  @Test
+  @DisplayName("GET / reste accessible avec liste vide si tortiki-api est en panne sur les villes")
+  @Story("Résilience — dégradation gracieuse")
+  @Severity(SeverityLevel.BLOCKER)
+  @Description("Si tortiki-api répond en erreur (500) lors de la récupération des "
+      + "villes actives, la page d'accueil doit tout de même se charger avec un "
+      + "statut 200 et une liste vide, plutôt que de propager une erreur 500 "
+      + "au visiteur (circuit breaker soft).")
+  void shouldDegradeGracefullyWhenActiveCitiesApiIsUnavailable() throws Exception {
+    when(searchApiClient.getCuisineTypes()).thenReturn(List.of());
+    when(searchApiClient.getActiveCities()).thenThrow(givenFeignServerError());
+
+    final ResultActions result = whenGetHome();
+
+    thenHomeIsRenderedWithActiveCities(result, List.of());
   }
 
   @Step("Préparer deux types de cuisine actifs")
@@ -138,6 +191,11 @@ class HomeControllerTest {
     return List.of(
         new CuisineTypeResponse(1L, "Ukrainienne", "Cuisine traditionnelle d'Ukraine", true),
         new CuisineTypeResponse(2L, "Française", "Cuisine traditionnelle française", true));
+  }
+
+  @Step("Préparer trois villes actives")
+  private List<String> givenActiveCities() {
+    return List.of("Nancy", "Paris", "Strasbourg");
   }
 
   @Step("Simuler une panne 500 de tortiki-api")
@@ -161,5 +219,14 @@ class HomeControllerTest {
     result.andExpect(status().isOk())
         .andExpect(view().name("home"))
         .andExpect(model().attribute("cuisineTypes", expectedCuisineTypes));
+  }
+
+  @Step("Vérifier que la page d'accueil est rendue avec les villes actives attendues")
+  private void thenHomeIsRenderedWithActiveCities(
+      final ResultActions result,
+      final List<String> expectedActiveCities) throws Exception {
+    result.andExpect(status().isOk())
+        .andExpect(view().name("home"))
+        .andExpect(model().attribute("activeCities", expectedActiveCities));
   }
 }
