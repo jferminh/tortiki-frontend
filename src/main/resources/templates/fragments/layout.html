@@ -48,9 +48,19 @@
                 <a sec:authorize="isAnonymous()"
                    th:href="@{/register}"
                    class="btn btn-success btn-sm">Créer un compte</a>
-                <a sec:authorize="isAuthenticated()"
+
+                <!-- SELLER : route reelle /dashboard, alignee sur RoleBasedAuthenticationSuccessHandler -->
+                <a sec:authorize="hasRole('SELLER')"
                    th:href="@{/dashboard}"
-                   class="btn btn-outline-success btn-sm">Mon espace</a>
+                   class="btn btn-outline-success btn-sm">Mes annonces</a>
+
+                <!-- BUYER : route existante /buyer/requests -->
+                <a sec:authorize="hasRole('BUYER')"
+                   th:href="@{/buyer/requests}"
+                   class="btn btn-outline-success btn-sm">Mes demandes</a>
+
+                <!-- ADMIN : lien retire temporairement, AdminController non implemente (backlog CDA) -->
+
                 <form sec:authorize="isAuthenticated()"
                       th:action="@{/logout}"
                       method="post"
