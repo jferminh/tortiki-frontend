@@ -59,7 +59,7 @@
                    th:href="@{/buyer/requests}"
                    class="btn btn-outline-success btn-sm">Mes demandes</a>
 
-                <!-- ADMIN : lien retire temporairement, AdminController non implemente (backlog CDA) -->
+                <!-- ADMIN : pas de lien navbar par choix produit, l'Admin accede a /admin via redirection post-login uniquement -->
 
                 <form sec:authorize="isAuthenticated()"
                       th:action="@{/logout}"
