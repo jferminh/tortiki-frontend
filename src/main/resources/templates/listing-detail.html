@@ -45,12 +45,20 @@
             <p class="mb-4" th:text="${listing.description}">Description du plat.</p>
 
             <!-- Allergènes -->
-            <div class="mb-3" th:if="${not #lists.isEmpty(listing.allergenIds)}">
-                <span class="badge bg-warning text-dark me-1" th:each="allergenId : ${listing.allergenIds}" th:text="'Allergène #' + ${allergenId}">Allergène</span>
+            <div class="mb-4">
+                <div th:if="${not #lists.isEmpty(allergenNames)}">
+                    <h2 class="h6 fw-semibold mb-2">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        Allergènes présents
+                    </h2>
+                    <span class="badge bg-warning text-dark me-1"
+                          th:each="allergenName : ${allergenNames}"
+                          th:text="${allergenName}">Allergène</span>
+                </div>
+                <p class="text-muted small mb-0" th:unless="${not #lists.isEmpty(allergenNames)}">
+                    Aucun allergène signalé par le vendeur.
+                </p>
             </div>
-            <p class="text-muted small mb-4" th:if="${not #lists.isEmpty(listing.allergenIds)}">
-                Aucun allergène signalé par le vendeur.
-            </p>
 
             <!-- Formulaire de contact -->
             <div class="card border-0 shadow-sm">
