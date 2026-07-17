@@ -35,6 +35,18 @@ public interface SearchApiClient {
   List<CuisineTypeResponse> getCuisineTypes();
 
   /**
+   * Récupère la liste des villes distinctes ayant au moins une annonce active.
+   *
+   * <p>Alimente l'autocomplétion du champ de recherche par ville sur la page
+   * d'accueil ({@code home.html}) — évite les fautes de frappe et guide
+   * le visiteur (persona Théo, recherche sur smartphone).</p>
+   *
+   * @return liste triée des villes distinctes, vide si aucune annonce active
+   */
+  @GetMapping("/api/v1/listings/cities")
+  List<String> getActiveCities();
+
+  /**
    * Recherche des annonces selon des critères géographiques et de filtre.
    *
    * <p>Tous les paramètres sont optionnels — un appel sans paramètre
